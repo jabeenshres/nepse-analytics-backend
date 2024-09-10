@@ -7,7 +7,7 @@ import os
 import tempfile
 import shutil
 import pandas as pd
-from RawData.models import RawDatapp
+from RawData.models import RawData
 
 class NepalStockScraper:
     def __init__(self):
@@ -141,26 +141,24 @@ class NepalStockScraper:
         df =pd.read_csv(file,on_bad_lines="skip")
         for _,row in df.iterrows():
             RawData.objects.update_or_create(
-                date=row['BUSINESS_Date'],
+                date=row['BUSINESS_DATE'],
                 symbol=row['SYMBOL'],
                 defaults={
-                    "close_price":row["CLOSE_PRICE"],
-                    "open_price":row["OPEN_PRICE"],
-                    "high_price":row["HIGH_PRICE"],
-                    "low_price":row["LOW_PRICE"],
-                    "total_traded_quantity":row["TOTAL_TRADED_QUANTITY"],
-                    "total_taded_value":row["TOTAL_TRADED_VALUE"],
-                    "total_trades":row["TOTAL_TRADES"],
-                    "ltp":row["LAST_UPDATED_PRICE"],
-                    "previous_day_close_price":row["PREVIOUS_DAY_CLOSE_PRICE"],
-                    "average_traded_price ":row["AVERAGE_TRADED_PRICE"],
-                    "fifty_two_week_high":row["FIFTY_TWO_WEEKS_HIGH"],
-                    "fifty_two_week_low ":row["FIFTY_TWO_WEEKS_LOW"],
-                    "market_capitalization":row["MARKET_CAPITALIZATION"],
-                    
+                    "open_price": row["OPEN_PRICE"],
+                    "high_price": row["HIGH_PRICE"],
+                    "low_price": row["LOW_PRICE"],
+                    "close_price": row["CLOSE_PRICE"],
+                    "total_traded_quantity": row["TOTAL_TRADED_QUANTITY"],
+                    "total_traded_value": row["TOTAL_TRADED_VALUE"],
+                    "previous_day_close_price": row["PREVIOUS_DAY_CLOSE_PRICE"],
+                    "fifty_two_weeks_high": row["FIFTY_TWO_WEEKS_HIGH"],
+                    "fifty_two_weeks_low": row["FIFTY_TWO_WEEKS_LOW"],  
+                    "last_updated_price": row["LAST_UPDATED_PRICE"], 
+                    "total_trades": row["TOTAL_TRADES"],
+                    "average_traded_price": row["AVERAGE_TRADED_PRICE"],
+                    "market_capitalization": row["MARKET_CAPITALIZATION"],
                 }
-
-            ) 
+            )
 
   
 
@@ -169,7 +167,7 @@ class NepalStockScraper:
 
     def close(self):
         self.driver.close()
-        shutil.rmtree(self.tempdir) 
+        shutil.rmtree(self.temp_dir) 
 
 # Usage
 scraper = NepalStockScraper()
