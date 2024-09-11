@@ -11,11 +11,13 @@ class StockDataViewSet(viewsets.ModelViewSet):
     serializer_class = StockDataSerializer
     
 class LoadStockData(APIView):
-    def get(self, request, format=None):
+    def post(self, request, format=None):
+        date_value = request.data.get("date",0)
         scraper = NepalStockScraper()
+        
         try:
             scraper.load_page("https://www.nepalstock.com/today-price")
-            scraper.loop_through_dates(StockData)
+            scraper.loop_through_dates(StockData,date_value)
             return Response("Data has been loaded successfully", status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -71,12 +71,13 @@ class NepalStockScraper:
         latest_file = max(full_paths, key=os.path.getmtime)
         return latest_file
 
-    def loop_through_dates(self, StockData):
+    def loop_through_dates(self, StockData,date_value):
         try:
-            start_date = datetime(2024, 3, 1)
-            end_date = start_date + relativedelta(day=20)
+            
+            start_date = datetime.now().date()
+            end_date = start_date - relativedelta(days=date_value)
             current_date = start_date
-            while current_date <= end_date:
+            while current_date >= end_date:
                 date = current_date.strftime("%m/%d/%Y")
                 self.change_date(date)
                 if self.check_content():
@@ -85,7 +86,7 @@ class NepalStockScraper:
                         download_file = self.get_latest_file()
                         self.save_to_database(download_file, StockData)
                         os.remove(download_file)
-                current_date += timedelta(days=1)
+                current_date -= timedelta(days=1)
         except Exception as e:
             raise Exception(f"Error while looping through dates: {e}")
 
