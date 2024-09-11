@@ -17,13 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from RawData.views import RawDataViewSet
+from StockData.views import StockDataViewSet, LoadStockData
 
-router_rawData=DefaultRouter()
-router_rawData.register(r"",RawDataViewSet)
+router_stock_data = DefaultRouter()
+router_stock_data.register(r"",StockDataViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("api/admin/",
-         include([path("raw_data/",include(router_rawData.urls))]))
+    path('api/admin/', include([
+        path('stock_data/', include(router_stock_data.urls)), 
+        path('load_stock_data/', LoadStockData.as_view(), name='load_stock_data'),  
+    ])),
+
 ]

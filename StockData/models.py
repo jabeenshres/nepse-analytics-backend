@@ -1,6 +1,6 @@
 from django.db import models
 
-class RawData(models.Model):
+class StockData(models.Model):
     date = models.DateField()
     symbol = models.CharField(max_length=10)
     open_price = models.DecimalField(max_digits=10, decimal_places=2)
