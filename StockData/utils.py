@@ -11,13 +11,17 @@ import math
 
 
 class NepalStockScraper:
+    # initializing the webdriver to open chrome 
     def __init__(self):
+        # creating temporary directory to store the csv file 
         self.temp_dir = tempfile.mkdtemp()
         chrome_options = webdriver.ChromeOptions()
+        # making the temp_dir default download folder  
         prefs = {"download.default_directory": self.temp_dir}
         chrome_options.add_experimental_option("prefs", prefs)
         self.driver = webdriver.Chrome(options=chrome_options)
 
+    # opening the nepal stock website 
     def load_page(self, url):
         try:
             self.driver.get(url)
@@ -28,32 +32,40 @@ class NepalStockScraper:
         except Exception as e:
             raise Exception(f"An error occurred: {e}")
 
+    # change the date function 
     def change_date(self, date):
         try:
+            # get the date input field 
             date_input = self.driver.find_element(By.XPATH, "//input[@bsdatepicker='']")
+            # get the filter button 
             filter_button = self.driver.find_element(By.CLASS_NAME, "box__filter--search")
+            # clear the date input field
             date_input.clear()
+            # change the date input field to incoming date 
             date_input.send_keys(date)
+            # click the filter button 
             filter_button.click()
-            time.sleep(3)
+            time.sleep(3) #wait for 3 sec after changing button
         except Exception as e:
             raise Exception(f"Error while changing the date: {e}")
 
     # function to download the csv file 
     def download_CSV(self):
         try:
+            # get the download csv button 
             download_link = self.driver.find_element(By.CLASS_NAME, "table__file")
-           # Click the download link
+            # click the download button 
             download_link.click()
-            # Wait for download
-            # time.sleep(5)
+          
         except Exception as e:
             print(f"Error clicking button: {e}")
 
-
+    # function to check wheather the date has data or not 
     def check_content(self):
         try:
+            # get the table body 
             tbody = self.driver.find_element(By.XPATH, "//tbody")
+            # check if it has inner content or not 
             has_children = len(tbody.find_elements(By.XPATH, ".//*")) > 0
             return has_children
         except Exception as e:
@@ -88,27 +100,10 @@ class NepalStockScraper:
     
         return latest_file
 
-    # def loop_through_dates(self, StockData,date_value):
-    #     try:
-            
-    #         start_date = datetime.now().date()
-    #         end_date = start_date - relativedelta(days=date_value)
-    #         current_date = start_date
-    #         while current_date >= end_date:
-    #             date = current_date.strftime("%m/%d/%Y")
-    #             self.change_date(date)
-    #             if self.check_content():
-    #                 self.download_CSV()
-    #                 if self.download_wait() >= 0:
-    #                     download_file = self.get_latest_file()
-    #                     self.save_to_database(download_file, StockData)
-    #                     os.remove(download_file)
-    #             current_date -= timedelta(days=1)
-    #     except Exception as e:
-    #         raise Exception(f"Error while looping through dates: {e}")
+    # function to loop on date and update datebase 
     def loop_through_dates(self,Stock,StockData,date_value):
         try:
-        # Define the start date
+        # start date 
             date_input = self.driver.find_element(By.XPATH, "//input[@bsdatepicker='']")
             start_date_str = date_input.get_attribute("value")
             start_date = datetime.strptime(start_date_str, "%m/%d/%Y")
@@ -118,20 +113,25 @@ class NepalStockScraper:
 
         # Loop through each date in the range
             current_date = start_date
-            print("looping")
+           
             while current_date >= end_date:
                 date = current_date.strftime("%m/%d/%Y")
-                print(date)
+                # change the date 
                 self.change_date(date)
+                # check whether the date has content or not 
                 if self.check_content():
+                    # if present then download the csv file 
                     self.download_CSV()
+                    # wait for the download to complete 
                     if self.download_wait() >= 0:
-                        print("Download has completed!!!")
+                       
                         files = os.listdir(self.temp_dir)
-                        print(f"Files in temp directory: {files}")
+                        # print(f"Files in temp directory: {files}")
                         if files:  # Ensure there are files before calling get_latest_file
                             download_file = self.get_latest_file()
+                            # update the database with new value 
                             self.save_to_database(download_file,Stock, StockData)
+                            # remove the csv file after updating the database 
                             os.remove(download_file)
                         else:
                             print("No files found in the temporary directory after download.")
@@ -141,9 +141,12 @@ class NepalStockScraper:
                 current_date -= timedelta(days=1)
         except Exception as e:
             print(f"Error while looping: {e}")
-
+            
+    
+    # function to save value to database 
     def save_to_database(self, file, Stock, StockData):
         try:
+            # read the csv file 
             df = pd.read_csv(file, on_bad_lines="skip")
         
             for _, row in df.iterrows():
@@ -179,7 +182,7 @@ class NepalStockScraper:
         except Exception as e:
             raise Exception(f"Error while saving data to the database: {e}")
 
-
+    # close the webdriver after completion 
     def close(self):
         self.driver.close()
         shutil.rmtree(self.temp_dir)

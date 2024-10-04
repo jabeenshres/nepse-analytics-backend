@@ -18,7 +18,8 @@ class StockViewSet(viewsets.ModelViewSet):
         if self.action == 'list' or self.action == 'retrieve':
             return StockListSerializer
         return StockSerializer
-    
+ 
+# view to load the database     
 class LoadStockData(APIView):
     def post(self, request, format=None):
         date_value = request.data.get("date",0)
@@ -27,6 +28,7 @@ class LoadStockData(APIView):
         try:
             scraper.load_page("https://www.nepalstock.com/today-price")
             scraper.loop_through_dates(Stock,StockData,date_value)
+            scraper.close()
             return Response("Data has been loaded successfully", status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -35,7 +37,7 @@ class LoadStockData(APIView):
             
             
 
-
+# view to get the latest data of stock 
 class LatestStockDataViewSet(viewsets.ViewSet):
     def list(self, request):
         # Get the latest date from StockData

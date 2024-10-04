@@ -6,6 +6,7 @@ class StockDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockData
         fields = '__all__'
+        # check if date and stock are unique 
         validators = [
             validators.UniqueTogetherValidator(
                 queryset=StockData.objects.all(),
