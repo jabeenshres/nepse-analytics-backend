@@ -1,0 +1,13 @@
+asgiref==3.8.1
+Django==4.2
+django-cors-headers==4.3.1
+django-environ==0.8.1
+django-filter==21.1
+djangorestframework==3.14.0
+djangorestframework-simplejwt==4.8.0
+PyJWT==2.9.0
+pytz==2024.1
+sqlparse==0.5.1
+typing_extensions==4.12.2
+selenium==4.24.0
+pandas==2.2.2
