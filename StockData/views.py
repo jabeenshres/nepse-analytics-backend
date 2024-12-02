@@ -28,7 +28,6 @@ class LoadStockData(APIView):
         try:
             scraper.load_page("https://www.nepalstock.com/today-price")
             scraper.loop_through_dates(Stock,StockData,date_value)
-            scraper.close()
             return Response("Data has been loaded successfully", status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
