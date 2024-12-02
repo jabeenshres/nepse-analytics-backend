@@ -139,6 +139,7 @@ class NepalStockScraper:
                     print("No content available for the date.")
 
                 current_date -= timedelta(days=1)
+            self.close()
         except Exception as e:
             print(f"Error while looping: {e}")
             
@@ -146,43 +147,51 @@ class NepalStockScraper:
     # function to save value to database 
     def save_to_database(self, file, Stock, StockData):
         try:
-            # read the csv file 
+            # Read the CSV file
             df = pd.read_csv(file, on_bad_lines="skip")
         
+            # Normalize column names to lowercase for consistent access
+            df.columns = df.columns.str.strip().str.lower()
+
             for _, row in df.iterrows():
                 # Get or create the Stock instance first
                 stock, created = Stock.objects.get_or_create(
-                    symbol = row['SYMBOL'],
-                    security_id = row["SECURITY_ID"],
-                    security_name = row["SECURITY_NAME"],
+                    symbol=row['symbol'],  
+                    security_id=row['security id'],  
+                    security_name=row['security name'],  
                     defaults={
-                        "fifty_two_weeks_high": row["FIFTY_TWO_WEEKS_HIGH"],
-                        "fifty_two_weeks_low": row["FIFTY_TWO_WEEKS_LOW"]
+                        "fifty_two_weeks_high": row['fifty two week high'],  
+                        "fifty_two_weeks_low": row['fifty two week low']  
                     }
                 )
             
                 # Now, create or update StockData associated with the Stock
                 StockData.objects.update_or_create(
-                    stock=stock,  # ForeignKey to Stock
-                    date=row['BUSINESS_DATE'],
+                    stock=stock,  
+                    date=row['business date'],  
                     defaults={
-                        "open_price": row["OPEN_PRICE"],
-                        "high_price": row["HIGH_PRICE"],
-                        "low_price": row["LOW_PRICE"],
-                        "close_price": row["CLOSE_PRICE"],
-                        "total_traded_quantity": row["TOTAL_TRADED_QUANTITY"],
-                        "total_traded_value": row["TOTAL_TRADED_VALUE"],
-                        "previous_day_close_price": row["PREVIOUS_DAY_CLOSE_PRICE"],
-                        "last_updated_price": row["LAST_UPDATED_PRICE"], 
-                        "total_trades": row["TOTAL_TRADES"],
-                        "average_traded_price": row["AVERAGE_TRADED_PRICE"],
-                        "market_capitalization": None if math.isnan(row["MARKET_CAPITALIZATION"]) else row["MARKET_CAPITALIZATION"],
+                        "open_price": row['open price'],  
+                        "high_price": row['high price'],  
+                        "low_price": row['low price'],  
+                        "close_price": row['close price'],  
+                        "total_traded_quantity": row['total traded quantity'],  
+                        "total_traded_value": row['total traded value'],  
+                        "previous_day_close_price": row['previous day close price'],  
+                        "last_updated_price": row['last updated price'],  
+                        "total_trades": row['total trades'],  
+                        "average_traded_price": row['average traded price'],  
+                        "market_capitalization": None if pd.isna(row['market capitalization']) else row['market capitalization'],  
                     }
                 )
         except Exception as e:
             raise Exception(f"Error while saving data to the database: {e}")
 
+
     # close the webdriver after completion 
     def close(self):
-        self.driver.close()
-        shutil.rmtree(self.temp_dir)
+        try:
+            if self.driver:
+                self.driver.quit()  # Use quit() instead of close() for safety
+                self.driver = None
+        except selenium.common.exceptions.InvalidSessionIdException:
+            print("Session is already closed.")
