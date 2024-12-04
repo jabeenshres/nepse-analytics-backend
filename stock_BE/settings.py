@@ -126,3 +126,11 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Rest Framework Start
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'stock_BE.pagination.StandardResultsSetPagination',
+
+}
+# Rest Framework End
