@@ -11,9 +11,21 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import environ
+from corsheaders.defaults import default_methods, default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# django environ configuration starts here
+env = environ.Env(
+    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, []),
+    CSRF_TRUSTED_ORIGINS=(list, []),
+    CORS_ALLOWED_ORIGIN_REGEXES=(list, []),
+)
+
+environ.Env.read_env(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -37,7 +49,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    
+    "corsheaders",
     'rest_framework',
     
    
@@ -126,3 +139,45 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Rest Framework Start
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'stock_BE.pagination.StandardResultsSetPagination',
+
+}
+# Rest Framework End
+
+# Cors
+
+# CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_METHODS = list(default_methods) + []
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Headers",
+    "Access-Control-Allow-Methods",
+    "Access-Control-Allow-Credentials",
+    "responseType",
+]
+
+
+CORS_ALLOWED_ORIGIN_REGEXES = env(
+    "CORS_ALLOWED_ORIGIN_REGEXES",
+    default=[
+        r"^http://localhost:\d+",
+        r"^http://192.168.\d+.\d+:\d+",
+        r"^http://.*.ngrok.io",
+    ],
+)
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = env(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        "http://localhost:8000",
+        "http://localhost:3000",
+        "http://localhost:3001",
+    ],
+)
+# cors end
