@@ -4,14 +4,19 @@ from .serializers import StockDataSerializer, StockSerializer, StockListSerializ
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from StockData.utils import NepalStockScraper
+from StockData.structure_data import StockSequenceGenerator
 from rest_framework import status
 from django.db.models import Max
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 
 class StockDataViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = StockData.objects.all()
     serializer_class = StockDataSerializer
     
 class StockViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
     def get_serializer_class(self):
@@ -21,6 +26,7 @@ class StockViewSet(viewsets.ModelViewSet):
  
 # view to load the database     
 class LoadStockData(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, format=None):
         date_value = request.data.get("date",0)
         scraper = NepalStockScraper()
@@ -34,10 +40,17 @@ class LoadStockData(APIView):
         finally:
             scraper.close()
             
+# view to provide data for model trainging
+class StructStockData(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        generator = StockSequenceGenerator(sequence_length=1)
+        X, y = generator.process(StockData)
+        return Response({'X': X.tolist(), 'y': y.tolist()}, status=status.HTTP_200_OK)
             
 
-# view to get the latest data of stock 
 class LatestStockDataViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
     def list(self, request):
         # Get the latest date from StockData
         latest_entry = StockData.objects.aggregate(latest_date=Max('date'))
@@ -48,7 +61,7 @@ class LatestStockDataViewSet(viewsets.ViewSet):
         
         # Prepare data for the response
         stock_data_dict = {}
-        
+
         for stock_data in latest_stock_data:
             stock = stock_data.stock
             if stock not in stock_data_dict:
@@ -75,9 +88,13 @@ class LatestStockDataViewSet(viewsets.ViewSet):
                 'average_traded_price': stock_data.average_traded_price,
                 'market_capitalization': stock_data.market_capitalization,
             })
-        
+
         # Serialize the data into the required format
         response_data = list(stock_data_dict.values())
-        return Response(response_data)
-            
-        
+
+        # Apply pagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 10  # You can also customize the page size dynamically
+        paginated_data = paginator.paginate_queryset(response_data, request)
+
+        return paginator.get_paginated_response(paginated_data)
