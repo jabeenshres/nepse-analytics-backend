@@ -45,9 +45,9 @@ class LoadStockData(APIView):
 class StructStockData(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self, request):
-        generator = StockSequenceGenerator(sequence_length=1)
-        X, y = generator.process(StockData)
-        return Response({'X': X.tolist(), 'y': y.tolist()}, status=status.HTTP_200_OK)
+        generator = StockSequenceGenerator()
+        df = generator.fetch_data(StockData)
+        return Response({'data':df}, status=status.HTTP_200_OK)
             
 
 class LatestStockDataViewSet(viewsets.ViewSet):
