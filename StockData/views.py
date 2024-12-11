@@ -4,14 +4,20 @@ from .serializers import StockDataSerializer, StockSerializer, StockListSerializ
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from StockData.utils import NepalStockScraper
+from StockData.structure_data import StockSequenceGenerator
 from rest_framework import status
 from django.db.models import Max
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Max, Q, F
+from rest_framework.permissions import IsAuthenticated
 
 class StockDataViewSet(viewsets.ModelViewSet):
+    # permission_classes = [IsAuthenticated]
     queryset = StockData.objects.all()
     serializer_class = StockDataSerializer
     
 class StockViewSet(viewsets.ModelViewSet):
+    # permission_classes = [IsAuthenticated]
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
     def get_serializer_class(self):
@@ -21,6 +27,7 @@ class StockViewSet(viewsets.ModelViewSet):
  
 # view to load the database     
 class LoadStockData(APIView):
+    # permission_classes = [IsAuthenticated]
     def post(self, request, format=None):
         date_value = request.data.get("date",0)
         scraper = NepalStockScraper()
@@ -34,22 +41,44 @@ class LoadStockData(APIView):
         finally:
             scraper.close()
             
+# view to provide data for model trainging
+class StructStockData(APIView):
+    # permission_classes = [IsAuthenticated]
+    def get(self, request):
+        generator = StockSequenceGenerator()
+        df = generator.fetch_data(StockData)
+        return Response({'data':df}, status=status.HTTP_200_OK)
             
 
-# view to get the latest data of stock 
 class LatestStockDataViewSet(viewsets.ViewSet):
     def list(self, request):
+        # Get filter parameters
+        search = request.query_params.get('search', None)
+        gainer = request.query_params.get('gainer', None)
+
         # Get the latest date from StockData
         latest_entry = StockData.objects.aggregate(latest_date=Max('date'))
         latest_date = latest_entry['latest_date']
         
-        # Get all StockData entries for the latest date
-        latest_stock_data = StockData.objects.filter(date=latest_date).select_related('stock')
+        # Start with filtering StockData for the latest date
+        queryset = StockData.objects.filter(date=latest_date).select_related('stock')
         
+         # Apply combined filter for symbol and security name
+        if search:
+            queryset = queryset.filter(
+                Q(stock__symbol__icontains=search) |
+                Q(stock__security_name__icontains=search)
+            )
+
+        # Apply filters based on query parameters
+        if gainer in ['true', 'True', '1']:
+            queryset = queryset.filter(close_price__gt=F('open_price'))
+        elif gainer in ['false', 'False', '0']:
+            queryset = queryset.filter(close_price__lte=F('open_price'))
+
         # Prepare data for the response
         stock_data_dict = {}
-        
-        for stock_data in latest_stock_data:
+        for stock_data in queryset:
             stock = stock_data.stock
             if stock not in stock_data_dict:
                 stock_data_dict[stock] = {
@@ -75,9 +104,13 @@ class LatestStockDataViewSet(viewsets.ViewSet):
                 'average_traded_price': stock_data.average_traded_price,
                 'market_capitalization': stock_data.market_capitalization,
             })
-        
+
         # Serialize the data into the required format
         response_data = list(stock_data_dict.values())
-        return Response(response_data)
-            
-        
+
+        # Apply pagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 10  # Customize the page size if needed
+        paginated_data = paginator.paginate_queryset(response_data, request)
+
+        return paginator.get_paginated_response(paginated_data)

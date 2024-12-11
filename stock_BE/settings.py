@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import environ
 from corsheaders.defaults import default_methods, default_headers
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,8 +38,12 @@ SECRET_KEY = 'django-insecure-m4kt(nc63agc0m!idmxtofxa-86a^6m5d$!hdkcy_24n#t&x=h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    ".ngrok-free.app",  # Replace with your ngrok URL
+    ".ngrok.io",  # Allows all ngrok subdomains
+]
 
 # Application definition
 
@@ -52,7 +57,9 @@ INSTALLED_APPS = [
     
     "corsheaders",
     'rest_framework',
-    
+    'rest_framework_simplejwt',
+    'django_filters',
+
    
     "StockData",
 ]
@@ -144,6 +151,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Rest Framework Start
 REST_FRAMEWORK = {
+    #  'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ),
     'DEFAULT_PAGINATION_CLASS': 'stock_BE.pagination.StandardResultsSetPagination',
 
 }
@@ -182,3 +195,12 @@ CSRF_TRUSTED_ORIGINS = env(
     ],
 )
 # cors end
+
+# jwt start 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=365),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+# jwt end 
