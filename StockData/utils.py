@@ -154,14 +154,17 @@ class NepalStockScraper:
             df.columns = df.columns.str.strip().str.lower()
 
             for _, row in df.iterrows():
+                # Replace NaN values with None for nullable fields
+                row = row.where(pd.notna(row), None)
+                
                 # Get or create the Stock instance first
                 stock, created = Stock.objects.get_or_create(
                     symbol=row['symbol'],  
                     security_id=row['security id'],  
                     security_name=row['security name'],  
                     defaults={
-                        "fifty_two_weeks_high": row['fifty two week high'],  
-                        "fifty_two_weeks_low": row['fifty two week low']  
+                        "fifty_two_weeks_high": row['fifty two week high'] or 0.0,  # Default value for non-nullable fields
+                        "fifty_two_weeks_low": row['fifty two week low'] or 0.0,
                     }
                 )
             
@@ -170,21 +173,22 @@ class NepalStockScraper:
                     stock=stock,  
                     date=row['business date'],  
                     defaults={
-                        "open_price": row['open price'],  
-                        "high_price": row['high price'],  
-                        "low_price": row['low price'],  
-                        "close_price": row['close price'],  
-                        "total_traded_quantity": row['total traded quantity'],  
-                        "total_traded_value": row['total traded value'],  
-                        "previous_day_close_price": row['previous day close price'],  
-                        "last_updated_price": row['last updated price'],  
-                        "total_trades": row['total trades'],  
-                        "average_traded_price": row['average traded price'],  
-                        "market_capitalization": None if pd.isna(row['market capitalization']) else row['market capitalization'],  
+                        "open_price": row['open price'] or 0.0,  
+                        "high_price": row['high price'] or 0.0,  
+                        "low_price": row['low price'] or 0.0,  
+                        "close_price": row['close price'] or 0.0,  
+                        "total_traded_quantity": row['total traded quantity'] or 0,  
+                        "total_traded_value": row['total traded value'] or 0.0,  
+                        "previous_day_close_price": row['previous day close price'] or 0.0,  
+                        "last_updated_price": row['last updated price'] or 0.0,  
+                        "total_trades": row['total trades'] or 0,  
+                        "average_traded_price": row['average traded price'] or 0.0,  
+                        "market_capitalization": row['market capitalization'],  # Already nullable in the model
                     }
                 )
         except Exception as e:
             raise Exception(f"Error while saving data to the database: {e}")
+
 
 
     # close the webdriver after completion 
