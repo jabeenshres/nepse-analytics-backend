@@ -67,3 +67,7 @@ sms.py
 logs/
 data/
 static/
+
+
+models/
+models/*.pkl

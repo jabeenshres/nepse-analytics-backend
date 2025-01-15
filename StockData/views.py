@@ -9,6 +9,7 @@ from rest_framework import status
 from django.db.models import Max
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Max, Q, F
+from StockData.predict_stock import StockPrediction
 from rest_framework.permissions import IsAuthenticated
 
 class StockDataViewSet(viewsets.ModelViewSet):
@@ -114,3 +115,14 @@ class LatestStockDataViewSet(viewsets.ViewSet):
         paginated_data = paginator.paginate_queryset(response_data, request)
 
         return paginator.get_paginated_response(paginated_data)
+    
+class GetPredicitons(APIView):
+    def get(self, request):
+        # Initialize prediction class
+        predictor = StockPrediction()
+        
+        # Get predictions using your class
+        df = predictor.getPrediction(StockData)
+
+        # Return predictions as JSON response
+        return Response(df, status=status.HTTP_200_OK)
