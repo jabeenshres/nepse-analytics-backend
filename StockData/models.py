@@ -16,6 +16,8 @@ class StockData(models.Model):
     total_trades = models.IntegerField()
     average_traded_price = models.DecimalField(max_digits=10, decimal_places=2)
     market_capitalization = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    LTSM_predicted_close_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) 
+    RF_predicted_close_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) 
 
     def __str__(self):
         return f"{self.stock.symbol} - {self.date}"
@@ -27,6 +29,14 @@ class Stock(models.Model):
     security_name = models.CharField(max_length=200)
     fifty_two_weeks_high = models.DecimalField(max_digits=10, decimal_places=2)
     fifty_two_weeks_low = models.DecimalField(max_digits=10, decimal_places=2)
+    LTSM_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5)
+    Overall_LTSM_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5)
+    LTSM_R_Square = models.DecimalField(max_digits=10, decimal_places=5)
+    Overall_LTSM_R_Square = models.DecimalField(max_digits=10, decimal_places=5)
+    RF_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5)
+    Overall_RF_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5)
+    RF_R_Square = models.DecimalField(max_digits=10, decimal_places=5)
+    Overall_RF_R_Square = models.DecimalField(max_digits=10, decimal_places=5)
 
     def __str__(self):
         return self.symbol

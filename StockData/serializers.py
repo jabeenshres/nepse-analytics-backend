@@ -27,3 +27,5 @@ class StockListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = '__all__'
+        
+        
