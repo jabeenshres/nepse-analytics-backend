@@ -11,6 +11,8 @@ from rest_framework.pagination import PageNumberPagination
 from django.db.models import Max, Q, F
 from StockData.predict_stock import StockPrediction
 from rest_framework.permissions import IsAuthenticated
+from django.core.exceptions import ObjectDoesNotExist
+from datetime import datetime
 
 class StockDataViewSet(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
@@ -126,3 +128,131 @@ class GetPredicitons(APIView):
 
         # Return predictions as JSON response
         return Response(df, status=status.HTTP_200_OK)
+
+
+class AddLTSMPrediction(APIView):
+    def post(self, request, format=None):
+        try:
+            predictions_data = request.data
+
+            # Validate input format
+            if not isinstance(predictions_data, list):
+                return Response({"error": "Invalid data format. Expected a list of predictions."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            for prediction in predictions_data:
+                required_keys = ["stock_symbol", "date", "predicted_close_price", "mae", "r_square","overall_mae","overall_r_square"]
+                missing_keys = [key for key in required_keys if key not in prediction]
+                if missing_keys:
+                    return Response({"error": f"Missing keys in prediction: {missing_keys}"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                stock_symbol = prediction["stock_symbol"]
+
+                # Parse and validate date
+                try:
+                    date = datetime.strptime(prediction["date"], "%Y-%m-%d").date()
+                except ValueError:
+                    return Response({"error": f"Invalid date format: {prediction['date']}. Use YYYY-MM-DD."},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                predicted_close_price = prediction["predicted_close_price"]
+                mae = prediction["mae"]
+                r_square = prediction["r_square"]
+                overall_mae = prediction["overall_mae"]
+                overall_r_square = prediction["overall_r_square"]
+
+                # Fetch or create the Stock object
+                try:
+                    stock = Stock.objects.get(symbol=stock_symbol)
+                except Stock.DoesNotExist:
+                    return Response({"error": f"Stock with symbol '{stock_symbol}' does not exist."},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                # Update or create StockData for the given date
+                stock_data, created = StockData.objects.get_or_create(
+                    stock=stock,
+                    date=date,
+                    defaults={
+                        "LTSM_predicted_close_price": predicted_close_price,
+                    }
+                )
+
+                if not created:
+                    stock_data.LTSM_predicted_close_price= predicted_close_price
+                    stock_data.save()
+
+                # Update the stock's MAE and R_Square fields
+                stock.LTSM_Mean_Absolute_Error = mae
+                stock.LTSM_R_Square = r_square if r_square is not None else stock.LTSM_R_Square
+                stock.Overall_LTSM_Mean_Absolute_Error = overall_mae
+                stock.Overall_LTSM_R_Square = overall_r_square if overall_r_square is not None else stock.Overall_LTSM_R_Square
+                stock.save()
+
+            return Response({"message": "Predictions added successfully"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+class AddRFPrediction(APIView):
+    def post(self, request, format=None):
+        try:
+            predictions_data = request.data
+
+            # Validate input format
+            if not isinstance(predictions_data, list):
+                return Response({"error": "Invalid data format. Expected a list of predictions."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            for prediction in predictions_data:
+                required_keys = ["stock_symbol", "date", "predicted_close_price", "mae", "r_square","overall_mae","overall_r_square"]
+                missing_keys = [key for key in required_keys if key not in prediction]
+                if missing_keys:
+                    return Response({"error": f"Missing keys in prediction: {missing_keys}"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                stock_symbol = prediction["stock_symbol"]
+
+                # Parse and validate date
+                try:
+                    date = datetime.strptime(prediction["date"], "%Y-%m-%d").date()
+                except ValueError:
+                    return Response({"error": f"Invalid date format: {prediction['date']}. Use YYYY-MM-DD."},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                predicted_close_price = prediction["predicted_close_price"]
+                mae = prediction["mae"]
+                r_square = prediction["r_square"]
+                overall_mae = prediction["overall_mae"]
+                overall_r_square = prediction["overall_r_square"]
+
+                # Fetch or create the Stock object
+                try:
+                    stock = Stock.objects.get(symbol=stock_symbol)
+                except Stock.DoesNotExist:
+                    return Response({"error": f"Stock with symbol '{stock_symbol}' does not exist."},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                # Update or create StockData for the given date
+                stock_data, created = StockData.objects.get_or_create(
+                    stock=stock,
+                    date=date,
+                    defaults={
+                        "RF_predicted_close_price": predicted_close_price,
+                    }
+                )
+
+                if not created:
+                    stock_data.RF_predicted_close_price = predicted_close_price
+                    stock_data.save()
+
+                # Update the stock's MAE and R_Square fields
+                stock.RF_Mean_Absolute_Error = mae
+                stock.RF_R_Square = r_square if r_square is not None else stock.RF_R_Square
+                stock.Overall_RF_Mean_Absolute_Error = overall_mae
+                stock.Overall_RF_R_Square = overall_r_square if overall_r_square is not None else stock.Overall_RF_R_Square
+                stock.save()
+
+            return Response({"message": "Predictions added successfully"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
