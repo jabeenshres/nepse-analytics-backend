@@ -46,11 +46,15 @@ class LoadStockData(APIView):
             
 # view to provide data for model trainging
 class StructStockData(APIView):
-    # permission_classes = [IsAuthenticated]
     def get(self, request):
         generator = StockSequenceGenerator()
         df = generator.fetch_data(StockData)
-        return Response({'data':df}, status=status.HTTP_200_OK)
+
+        # Convert DataFrame to JSON-safe dictionary
+        json_data = df.to_dict(orient="records")
+
+        return Response({'data': json_data}, status=status.HTTP_200_OK)
+
             
 
 class LatestStockDataViewSet(viewsets.ViewSet):
@@ -140,8 +144,11 @@ class AddLTSMPrediction(APIView):
                 return Response({"error": "Invalid data format. Expected a list of predictions."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
+            skipped_predictions = []  # To track skipped predictions
+
             for prediction in predictions_data:
-                required_keys = ["stock_symbol", "date", "predicted_close_price", "mae", "r_square","overall_mae","overall_r_square"]
+                # Required keys for each prediction
+                required_keys = ["stock_symbol", "date", "predicted_close_price", "mae", "r_square", "overall_mae", "overall_r_square"]
                 missing_keys = [key for key in required_keys if key not in prediction]
                 if missing_keys:
                     return Response({"error": f"Missing keys in prediction: {missing_keys}"},
@@ -162,25 +169,26 @@ class AddLTSMPrediction(APIView):
                 overall_mae = prediction["overall_mae"]
                 overall_r_square = prediction["overall_r_square"]
 
-                # Fetch or create the Stock object
+                # Fetch the Stock object
                 try:
                     stock = Stock.objects.get(symbol=stock_symbol)
                 except Stock.DoesNotExist:
                     return Response({"error": f"Stock with symbol '{stock_symbol}' does not exist."},
                                     status=status.HTTP_400_BAD_REQUEST)
 
-                # Update or create StockData for the given date
-                stock_data, created = StockData.objects.get_or_create(
-                    stock=stock,
-                    date=date,
-                    defaults={
-                        "LTSM_predicted_close_price": predicted_close_price,
-                    }
-                )
-
-                if not created:
-                    stock_data.LTSM_predicted_close_price= predicted_close_price
+                # Update StockData for the given date
+                try:
+                    stock_data = StockData.objects.get(stock=stock, date=date)
+                    stock_data.LTSM_predicted_close_price = predicted_close_price
                     stock_data.save()
+                except StockData.DoesNotExist:
+                    # Log skipped predictions and continue
+                    skipped_predictions.append({
+                        "stock_symbol": stock_symbol,
+                        "date": str(date),
+                        "reason": "StockData does not exist for this date"
+                    })
+                    continue
 
                 # Update the stock's MAE and R_Square fields
                 stock.LTSM_Mean_Absolute_Error = mae
@@ -189,10 +197,15 @@ class AddLTSMPrediction(APIView):
                 stock.Overall_LTSM_R_Square = overall_r_square if overall_r_square is not None else stock.Overall_LTSM_R_Square
                 stock.save()
 
-            return Response({"message": "Predictions added successfully"}, status=status.HTTP_200_OK)
+            response_message = {"message": "Predictions updated successfully"}
+            if skipped_predictions:
+                response_message["skipped_predictions"] = skipped_predictions
+
+            return Response(response_message, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 class AddRFPrediction(APIView):
     def post(self, request, format=None):
         try:
@@ -203,8 +216,11 @@ class AddRFPrediction(APIView):
                 return Response({"error": "Invalid data format. Expected a list of predictions."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
+            skipped_predictions = []  # To track skipped predictions
+
             for prediction in predictions_data:
-                required_keys = ["stock_symbol", "date", "predicted_close_price", "mae", "r_square","overall_mae","overall_r_square"]
+                # Required keys for each prediction
+                required_keys = ["stock_symbol", "date", "predicted_close_price", "mae", "r_square", "overall_mae", "overall_r_square"]
                 missing_keys = [key for key in required_keys if key not in prediction]
                 if missing_keys:
                     return Response({"error": f"Missing keys in prediction: {missing_keys}"},
@@ -225,25 +241,26 @@ class AddRFPrediction(APIView):
                 overall_mae = prediction["overall_mae"]
                 overall_r_square = prediction["overall_r_square"]
 
-                # Fetch or create the Stock object
+                # Fetch the Stock object
                 try:
                     stock = Stock.objects.get(symbol=stock_symbol)
                 except Stock.DoesNotExist:
                     return Response({"error": f"Stock with symbol '{stock_symbol}' does not exist."},
                                     status=status.HTTP_400_BAD_REQUEST)
 
-                # Update or create StockData for the given date
-                stock_data, created = StockData.objects.get_or_create(
-                    stock=stock,
-                    date=date,
-                    defaults={
-                        "RF_predicted_close_price": predicted_close_price,
-                    }
-                )
-
-                if not created:
+                # Update StockData for the given date
+                try:
+                    stock_data = StockData.objects.get(stock=stock, date=date)
                     stock_data.RF_predicted_close_price = predicted_close_price
                     stock_data.save()
+                except StockData.DoesNotExist:
+                    # Log skipped predictions and continue
+                    skipped_predictions.append({
+                        "stock_symbol": stock_symbol,
+                        "date": str(date),
+                        "reason": "StockData does not exist for this date"
+                    })
+                    continue
 
                 # Update the stock's MAE and R_Square fields
                 stock.RF_Mean_Absolute_Error = mae
@@ -252,7 +269,11 @@ class AddRFPrediction(APIView):
                 stock.Overall_RF_R_Square = overall_r_square if overall_r_square is not None else stock.Overall_RF_R_Square
                 stock.save()
 
-            return Response({"message": "Predictions added successfully"}, status=status.HTTP_200_OK)
+            response_message = {"message": "Predictions updated successfully"}
+            if skipped_predictions:
+                response_message["skipped_predictions"] = skipped_predictions
+
+            return Response(response_message, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
