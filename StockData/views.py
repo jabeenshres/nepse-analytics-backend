@@ -10,17 +10,15 @@ from django.db.models import Max
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Max, Q, F
 from StockData.predict_stock import StockPrediction
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 
 class StockDataViewSet(viewsets.ModelViewSet):
-    # permission_classes = [IsAuthenticated]
     queryset = StockData.objects.all()
     serializer_class = StockDataSerializer
     
 class StockViewSet(viewsets.ModelViewSet):
-    # permission_classes = [IsAuthenticated]
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
     def get_serializer_class(self):
@@ -30,7 +28,7 @@ class StockViewSet(viewsets.ModelViewSet):
  
 # view to load the database     
 class LoadStockData(APIView):
-    # permission_classes = [IsAuthenticated]
+    
     def post(self, request, format=None):
         date_value = request.data.get("date",0)
         scraper = NepalStockScraper()
@@ -46,6 +44,7 @@ class LoadStockData(APIView):
             
 # view to provide data for model trainging
 class StructStockData(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         generator = StockSequenceGenerator()
         df = generator.fetch_data(StockData)
@@ -117,7 +116,7 @@ class LatestStockDataViewSet(viewsets.ViewSet):
 
         # Apply pagination
         paginator = PageNumberPagination()
-        paginator.page_size = 10  # Customize the page size if needed
+        paginator.page_size = 20  # Customize the page size if needed
         paginated_data = paginator.paginate_queryset(response_data, request)
 
         return paginator.get_paginated_response(paginated_data)
@@ -135,6 +134,7 @@ class GetPredicitons(APIView):
 
 
 class AddLTSMPrediction(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, format=None):
         try:
             predictions_data = request.data
@@ -207,6 +207,7 @@ class AddLTSMPrediction(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class AddRFPrediction(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, format=None):
         try:
             predictions_data = request.data

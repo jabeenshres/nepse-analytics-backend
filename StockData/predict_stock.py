@@ -5,11 +5,11 @@ from .models import StockData
 
 class StockPrediction:
     def getPrediction(self, stockData):
-        # Get the models from the StockDataConfig (ensure they are loaded only once)
+        # Get the models from the StockDataConfig
         stock_data_config = apps.get_app_config('StockData')  # Get the StockDataConfig instance
         lstm_model = stock_data_config.lstm_model  # LSTM model
         rf_model = stock_data_config.rf_model  # Random Forest model
-        scaler = MinMaxScaler()  # Use a single scaler for all stocks
+        scaler = MinMaxScaler()  
 
         predictions = []  # To store predictions for each stock
 

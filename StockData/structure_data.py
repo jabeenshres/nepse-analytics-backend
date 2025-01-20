@@ -11,7 +11,7 @@ class StockSequenceGenerator:
         for col in ["open_price", "high_price", "low_price", "close_price"]:
             df[col] = pd.to_numeric(df[col], errors="coerce")  # Replace invalid values with NaN
 
-        print(df[df.isna().any(axis=1)])  # Log rows with invalid values
+        
 
         # Convert 'date' to datetime and sort
         df["date"] = pd.to_datetime(df["date"])
