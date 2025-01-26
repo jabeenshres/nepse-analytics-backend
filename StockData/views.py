@@ -28,7 +28,6 @@ class StockViewSet(viewsets.ModelViewSet):
  
 # view to load the database     
 class LoadStockData(APIView):
-    
     def post(self, request, format=None):
         date_value = request.data.get("date",0)
         scraper = NepalStockScraper()
@@ -61,15 +60,27 @@ class LatestStockDataViewSet(viewsets.ViewSet):
         # Get filter parameters
         search = request.query_params.get('search', None)
         gainer = request.query_params.get('gainer', None)
+        exact_date = request.query_params.get('date', None)  
 
-        # Get the latest date from StockData
-        latest_entry = StockData.objects.aggregate(latest_date=Max('date'))
-        latest_date = latest_entry['latest_date']
-        
-        # Start with filtering StockData for the latest date
-        queryset = StockData.objects.filter(date=latest_date).select_related('stock')
-        
-         # Apply combined filter for symbol and security name
+        # Determine which date to filter
+        if exact_date:
+            try:
+                # Validate the exact date format
+                exact_date = datetime.strptime(exact_date, '%Y-%m-%d').date()
+            except ValueError:
+                return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
+        else:
+            # Fallback to the latest date if no exact date is provided
+            latest_entry = StockData.objects.aggregate(latest_date=Max('date'))
+            exact_date = latest_entry['latest_date']
+
+        if not exact_date:
+            return Response({'error': 'No data available for the specified or latest date.'}, status=404)
+
+        # Filter StockData for the specified date
+        queryset = StockData.objects.filter(date=exact_date).select_related('stock')
+
+        # Apply combined filter for symbol and security name
         if search:
             queryset = queryset.filter(
                 Q(stock__symbol__icontains=search) |
@@ -122,6 +133,7 @@ class LatestStockDataViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(paginated_data)
     
 class GetPredicitons(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         # Initialize prediction class
         predictor = StockPrediction()

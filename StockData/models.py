@@ -21,6 +21,9 @@ class StockData(models.Model):
 
     def __str__(self):
         return f"{self.stock.symbol} - {self.date}"
+    
+    class Meta:
+        ordering = ['-date']
 
 # model for stock 
 class Stock(models.Model):
