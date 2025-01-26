@@ -5,14 +5,14 @@ from .models import StockData
 
 class StockPrediction:
     def getPrediction(self, stockData):
-        # Get the models from the StockDataConfig (ensure they are loaded only once)
+        # Get the models from the StockDataConfig
         stock_data_config = apps.get_app_config('StockData')  # Get the StockDataConfig instance
         lstm_model = stock_data_config.lstm_model  # LSTM model
-        rf_model = stock_data_config.rf_model  # Random Forest model (assumed to be present)
-        scaler = MinMaxScaler()  # Use a single scaler for all stocks
-        
-        predictions = []
-        
+        rf_model = stock_data_config.rf_model  # Random Forest model
+        scaler = MinMaxScaler()  
+
+        predictions = []  # To store predictions for each stock
+
         try:
             # Get the distinct stock symbols
             distinct_stocks = stockData.objects.values('stock__symbol').distinct()
@@ -30,40 +30,34 @@ class StockPrediction:
                         'error': 'Not enough data for prediction'
                     })
                     continue
-                
+
                 # Prepare the data for prediction
                 data = np.array([[d.open_price, d.high_price, d.low_price, d.close_price, d.total_traded_quantity] for d in stock_data])
-
-                # Normalize the data for all stocks (fit on the first stock and apply to all)
+                
+                # Normalize the data
                 normalized_data = scaler.fit_transform(data)
 
-                # Reshape the data for prediction (LSTM expects 3D data, so keep it for LSTM)
-                X_lstm = normalized_data.reshape((1, 6, 5))  # 6 days, 5 features (open, high, low, close, quantity)
-                
-                # Make predictions using the LSTM model
+                # Prepare data for LSTM (3D input: [samples, time_steps, features])
+                X_lstm = normalized_data.reshape((1, 6, 5))  # Last 6 days, 5 features
+
+                # Predict using the LSTM model
                 predicted_lstm_price = lstm_model.predict(X_lstm)
 
-                # Reshape the data for Random Forest (2D input expected)
-                X_rf = normalized_data  # Random Forest expects 2D data (no reshaping)
-                
-                # Make predictions using the Random Forest model
+                # Prepare data for Random Forest (Flatten 6 days of data into 1D: [samples, features])
+                X_rf = normalized_data[-6:].reshape(1, -1)  # Flatten to 1 row with 30 features
+
+                # Predict using the Random Forest model
                 predicted_rf_price = rf_model.predict(X_rf)
 
-                # Inverse transform to original scale for LSTM prediction
-                data_padded_lstm = np.zeros_like(data)  # Create a padded array for the LSTM predicted data
-                data_padded_lstm[:, 3] = predicted_lstm_price.flatten()  # Set only the predicted 'close_price'
+                # Inverse transform LSTM prediction
+                data_padded_lstm = np.zeros((1, 5))  # Placeholder with 5 features
+                data_padded_lstm[:, 3] = predicted_lstm_price.flatten()  # Set predicted 'close_price'
+                predicted_lstm_close_price = scaler.inverse_transform(data_padded_lstm)[0, 3]
 
-                # Reverse scaling for predicted LSTM close price
-                original_scaled_data_lstm = scaler.inverse_transform(data_padded_lstm)
-                predicted_lstm_close_price = original_scaled_data_lstm[0, 3]  # Get the predicted close price in original scale
-
-                # Inverse transform to original scale for RF prediction
-                data_padded_rf = np.zeros_like(data)  # Create a padded array for the RF predicted data
-                data_padded_rf[:, 3] = predicted_rf_price.flatten()  # Set only the predicted 'close_price'
-
-                # Reverse scaling for predicted RF close price
-                original_scaled_data_rf = scaler.inverse_transform(data_padded_rf)
-                predicted_rf_close_price = original_scaled_data_rf[0, 3]  # Get the predicted close price in original scale
+                # Inverse transform Random Forest prediction
+                data_padded_rf = np.zeros((1, 5))  # Placeholder with 5 features
+                data_padded_rf[:, 3] = predicted_rf_price.flatten()  # Set predicted 'close_price'
+                predicted_rf_close_price = scaler.inverse_transform(data_padded_rf)[0, 3]
 
                 # Find the most recent date in the stock data for this symbol
                 most_recent_date = stock_data[0].date
@@ -88,6 +82,7 @@ class StockPrediction:
                         RF_predicted_close_price=predicted_rf_close_price
                     )
 
+                # Append the predictions to the list
                 predictions.append({
                     'symbol': stock_symbol,
                     'predicted_lstm_close_price': predicted_lstm_close_price,

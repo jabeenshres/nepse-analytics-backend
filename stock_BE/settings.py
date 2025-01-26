@@ -151,12 +151,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Rest Framework Start
 REST_FRAMEWORK = {
-    #  'DEFAULT_AUTHENTICATION_CLASSES': (
-    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
-    # ),
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ),
+     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
     'DEFAULT_PAGINATION_CLASS': 'stock_BE.pagination.StandardResultsSetPagination',
 
 }
@@ -196,11 +196,18 @@ CSRF_TRUSTED_ORIGINS = env(
 )
 # cors end
 
-# jwt start 
+# simple jwt config start
+USER_AUTHENTICATION_RULE = (
+    "rest_framework_simplejwt.authentication.default_user_authentication_rule"
+)
+
+# for jwt
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=365),
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
 }
+
+
 
 # jwt end 

@@ -21,6 +21,9 @@ class StockData(models.Model):
 
     def __str__(self):
         return f"{self.stock.symbol} - {self.date}"
+    
+    class Meta:
+        ordering = ['-date']
 
 # model for stock 
 class Stock(models.Model):
@@ -29,14 +32,14 @@ class Stock(models.Model):
     security_name = models.CharField(max_length=200)
     fifty_two_weeks_high = models.DecimalField(max_digits=10, decimal_places=2)
     fifty_two_weeks_low = models.DecimalField(max_digits=10, decimal_places=2)
-    LTSM_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5)
-    Overall_LTSM_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5)
-    LTSM_R_Square = models.DecimalField(max_digits=10, decimal_places=5)
-    Overall_LTSM_R_Square = models.DecimalField(max_digits=10, decimal_places=5)
-    RF_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5)
-    Overall_RF_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5)
-    RF_R_Square = models.DecimalField(max_digits=10, decimal_places=5)
-    Overall_RF_R_Square = models.DecimalField(max_digits=10, decimal_places=5)
+    LTSM_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
+    Overall_LTSM_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
+    LTSM_R_Square = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
+    Overall_LTSM_R_Square = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
+    RF_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
+    Overall_RF_Mean_Absolute_Error = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
+    RF_R_Square = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
+    Overall_RF_R_Square = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
 
     def __str__(self):
         return self.symbol
