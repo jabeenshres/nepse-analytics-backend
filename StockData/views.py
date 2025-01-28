@@ -19,6 +19,7 @@ class StockDataViewSet(viewsets.ModelViewSet):
     serializer_class = StockDataSerializer
     
 class StockViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
     def get_serializer_class(self):
@@ -28,6 +29,7 @@ class StockViewSet(viewsets.ModelViewSet):
  
 # view to load the database     
 class LoadStockData(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, format=None):
         date_value = request.data.get("date",0)
         scraper = NepalStockScraper()
@@ -56,6 +58,7 @@ class StructStockData(APIView):
             
 
 class LatestStockDataViewSet(viewsets.ViewSet):
+    permission_classes = [AllowAny]
     def list(self, request):
         # Get filter parameters
         search = request.query_params.get('search', None)
@@ -135,11 +138,12 @@ class LatestStockDataViewSet(viewsets.ViewSet):
 class GetPredicitons(APIView):
     permission_classes = [AllowAny]
     def get(self, request):
+        prediction_date = request.query_params.get('date', None)  
         # Initialize prediction class
         predictor = StockPrediction()
         
         # Get predictions using your class
-        df = predictor.getPrediction(StockData)
+        df = predictor.getPrediction(StockData,prediction_date)
 
         # Return predictions as JSON response
         return Response(df, status=status.HTTP_200_OK)
