@@ -13,6 +13,8 @@ from StockData.predict_stock import StockPrediction
 from rest_framework.permissions import AllowAny
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
+from accounts.permissions import IsAdmin
+
 
 class StockDataViewSet(viewsets.ModelViewSet):
     queryset = StockData.objects.all()
@@ -58,7 +60,7 @@ class StructStockData(APIView):
             
 
 class LatestStockDataViewSet(viewsets.ViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdmin]
     def list(self, request):
         # Get filter parameters
         search = request.query_params.get('search', None)

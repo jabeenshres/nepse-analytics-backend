@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 
    
     "StockData",
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -200,6 +201,8 @@ CSRF_TRUSTED_ORIGINS = env(
 USER_AUTHENTICATION_RULE = (
     "rest_framework_simplejwt.authentication.default_user_authentication_rule"
 )
+AUTH_USER_MODEL = 'accounts.User'
+
 
 # for jwt
 SIMPLE_JWT = {
