@@ -13,11 +13,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user = super().create(validated_data)
         user.set_password(validated_data['password'])
         
-        # If the user is a superuser, set their role to 'admin'
-        if user.is_superuser:
-            user.role = 'admin'
-        else:
-            user.role = 'user'  # Default role for normal users
+        user.role = 'user'  # Default role for normal users
         
         user.save()
         return user

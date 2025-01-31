@@ -34,7 +34,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 # User List and Update Role View
 class UserListView(APIView):
-    permission_classes = [AllowAny]  
+    permission_classes = [IsAdmin]  
 
     def get(self, request):
         # List all users with username, email, and role
@@ -42,26 +42,29 @@ class UserListView(APIView):
         return Response(users, status=status.HTTP_200_OK)
 
     def put(self, request):
-        # Update user role
+    # Update user role
         try:
             data = json.loads(request.body)
             user_id = data.get('id')
             new_role = data.get('role')
 
+            # Validate input
             if not user_id or not new_role:
                 return Response({"error": "User ID and role are required."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Check if the user exists
             user = get_object_or_404(User, id=user_id)
 
-            if new_role not in dict(User.ROLE_CHOICES):
-                return Response({"error": "Invalid role provided."}, status=status.HTTP_400_BAD_REQUEST)
+            # Restrict roles to 'manager' or 'user'
+            valid_roles = ['manager', 'user']
+            if new_role not in valid_roles:
+                return Response({"error": f"Invalid role. Valid roles are: {', '.join(valid_roles)}."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Update user role and save
             user.role = new_role
             user.save()
 
-            return Response({"message": f"Role updated to {new_role} for user {user.username}"}, status=status.HTTP_200_OK)
+            return Response({"message": f"Role updated to '{new_role}' for user '{user.username}'."}, status=status.HTTP_200_OK)
 
         except json.JSONDecodeError:
             return Response({"error": "Invalid JSON body"}, status=status.HTTP_400_BAD_REQUEST)

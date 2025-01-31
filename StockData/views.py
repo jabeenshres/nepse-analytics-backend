@@ -13,7 +13,7 @@ from StockData.predict_stock import StockPrediction
 from rest_framework.permissions import AllowAny
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
-from accounts.permissions import IsAdmin
+from accounts.permissions import IsAdminOrManager
 
 
 class StockDataViewSet(viewsets.ModelViewSet):
@@ -21,7 +21,6 @@ class StockDataViewSet(viewsets.ModelViewSet):
     serializer_class = StockDataSerializer
     
 class StockViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
     def get_serializer_class(self):
@@ -31,7 +30,7 @@ class StockViewSet(viewsets.ModelViewSet):
  
 # view to load the database     
 class LoadStockData(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrManager]
     def post(self, request, format=None):
         date_value = request.data.get("date",0)
         scraper = NepalStockScraper()
@@ -60,7 +59,7 @@ class StructStockData(APIView):
             
 
 class LatestStockDataViewSet(viewsets.ViewSet):
-    permission_classes = [IsAdmin]
+    permission_classes = [AllowAny]
     def list(self, request):
         # Get filter parameters
         search = request.query_params.get('search', None)
@@ -138,7 +137,7 @@ class LatestStockDataViewSet(viewsets.ViewSet):
         return paginator.get_paginated_response(paginated_data)
     
 class GetPredicitons(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminOrManager]
     def get(self, request):
         prediction_date = request.query_params.get('date', None)  
         # Initialize prediction class
