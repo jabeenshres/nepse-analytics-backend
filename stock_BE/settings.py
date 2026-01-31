@@ -8,6 +8,8 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
+
+using python 3.10.14
 """
 
 from pathlib import Path
@@ -60,8 +62,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
 
-   
-    "StockData",
+    'stock_data',
+    'predictions',
     'accounts',
 ]
 
