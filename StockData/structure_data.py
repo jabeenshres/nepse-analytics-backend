@@ -1,19 +1,19 @@
+import pandas as pd
+
 
 class StockSequenceGenerator:
-   def fetch_data(self, StockData):
-        import pandas as pd
+    def fetch_data(self, stock_data_model):
+        stock_data_queryset = stock_data_model.objects.values(
+            "stock__symbol", "date", "open_price", "high_price",
+            "low_price", "close_price", "total_traded_quantity"
+        )
+        stock_dataframe = pd.DataFrame(stock_data_queryset)
 
-        # Query data
-        data = StockData.objects.values("stock__symbol", "date", "open_price", "high_price", "low_price", "close_price", "total_traded_quantity")
-        df = pd.DataFrame(data)
+        for column in ["open_price", "high_price", "low_price", "close_price"]:
+            stock_dataframe[column] = pd.to_numeric(
+                stock_dataframe[column], errors="coerce"
+            )
 
-        # Check for out-of-range values
-        for col in ["open_price", "high_price", "low_price", "close_price"]:
-            df[col] = pd.to_numeric(df[col], errors="coerce")  # Replace invalid values with NaN
-
-        
-
-        # Convert 'date' to datetime and sort
-        df["date"] = pd.to_datetime(df["date"])
-        df.sort_values(by=["stock__symbol", "date"], inplace=True)
-        return df
+        stock_dataframe["date"] = pd.to_datetime(stock_dataframe["date"])
+        stock_dataframe.sort_values(by=["stock__symbol", "date"], inplace=True)
+        return stock_dataframe

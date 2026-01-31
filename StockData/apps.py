@@ -2,12 +2,12 @@ import os
 import pickle
 from django.apps import AppConfig
 
-class StockdataConfig(AppConfig):
+
+class StockDataConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'StockData'
 
     def ready(self):
-        # Correct paths to the `models` directory
         base_dir = os.path.dirname(os.path.dirname(__file__))
         lstm_model_path = os.path.join(base_dir, "models", "lstm_stock_model.pkl")
         rf_model_path = os.path.join(base_dir, "models", "rf_stock_model.pkl")

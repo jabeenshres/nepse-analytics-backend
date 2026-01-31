@@ -17,14 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from StockData.views import StockDataViewSet, LoadStockData, StockViewSet, LatestStockDataViewSet, StructStockData, GetPredicitons, AddLTSMPrediction, AddRFPrediction
+from StockData.views import StockDataViewSet, LoadStockData, StockViewSet, LatestStockDataViewSet, StructStockData, GetPredictions, AddLSTMPrediction, AddRFPrediction
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 router_stock_data = DefaultRouter()
-router_stock_data.register(r"",StockDataViewSet)
+router_stock_data.register(r"", StockDataViewSet)
 
 router_stock = DefaultRouter()
-router_stock.register(r"",StockViewSet)
+router_stock.register(r"", StockViewSet)
 
 
 
@@ -33,12 +33,12 @@ urlpatterns = [
     path('api/admin/', include([
         path('stock_data/', include(router_stock_data.urls)), 
         path('stock/', include(router_stock.urls)), 
-        path('add_LTSM_prediction/', AddLTSMPrediction.as_view(),name="add_LTSM_prediction"), 
-        path('add_RF_prediction/', AddRFPrediction.as_view(),name="add_RF_prediction"), 
+        path('add_LSTM_prediction/', AddLSTMPrediction.as_view(), name="add_LSTM_prediction"), 
+        path('add_RF_prediction/', AddRFPrediction.as_view(), name="add_RF_prediction"), 
         path('load_stock_data/', LoadStockData.as_view(), name='load_stock_data'),  
         path('structdata/', StructStockData.as_view(), name='struct_stock_data'),  
         path('recent/', LatestStockDataViewSet.as_view({'get': 'list'}), name='recent_stock_data'),  
-        path('predict/', GetPredicitons.as_view(), name='get_predictions'),
+        path('predict/', GetPredictions.as_view(), name='get_predictions'),
 
     ])),
     path('api/accounts/', include('accounts.urls')),

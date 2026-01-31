@@ -4,111 +4,111 @@ from sklearn.preprocessing import MinMaxScaler
 from collections import defaultdict
 from datetime import datetime
 
-class StockPrediction:
-    def getPrediction(self, stockData, prediction_date=None):
-        # Get the models from the StockDataConfig (ensure they are loaded only once)
-        stock_data_config = apps.get_app_config('StockData')  # Get the StockDataConfig instance
-        lstm_model = stock_data_config.lstm_model  # LSTM model
-        rf_model = stock_data_config.rf_model  # Random Forest model
-        scaler = MinMaxScaler()  # Use a single scaler for all stocks
+MIN_DATA_POINTS_REQUIRED = 6
+TIME_STEPS = 6
+FEATURE_COUNT = 5
+CLOSE_PRICE_INDEX = 3
 
-        predictions = []  # To store predictions for each stock
+
+class StockPrediction:
+    def get_prediction(self, stock_data_model, prediction_date=None):
+        stock_data_config = apps.get_app_config('StockData')
+        lstm_model = stock_data_config.lstm_model
+        rf_model = stock_data_config.rf_model
+        scaler = MinMaxScaler()
+
+        predictions = []
 
         try:
-            # Parse the prediction date if provided
             if prediction_date:
                 prediction_date = datetime.strptime(prediction_date, '%Y-%m-%d').date()
 
-            # Fetch all stock data and group it by stock symbol in one query
-            all_stock_data = stockData.objects.order_by('stock__symbol', '-date').values(
-                'id', 'stock__symbol', 'date', 'open_price', 'high_price', 'low_price', 
-                'close_price', 'total_traded_quantity'
+            all_stock_data = stock_data_model.objects.order_by(
+                'stock__symbol', '-date'
+            ).values(
+                'id', 'stock__symbol', 'date', 'open_price', 'high_price',
+                'low_price', 'close_price', 'total_traded_quantity'
             )
 
-            # Group stock data by symbol
-            grouped_data = defaultdict(list)
-            for entry in all_stock_data:
-                grouped_data[entry['stock__symbol']].append(entry)
+            grouped_data_by_symbol = defaultdict(list)
+            for stock_entry in all_stock_data:
+                grouped_data_by_symbol[stock_entry['stock__symbol']].append(stock_entry)
 
-            # Process each stock symbol
-            for stock_symbol, stock_entries in grouped_data.items():
-                # Ensure there are at least 6 data points for prediction
-                if len(stock_entries) < 6:
+            for stock_symbol, stock_entries in grouped_data_by_symbol.items():
+                if len(stock_entries) < MIN_DATA_POINTS_REQUIRED:
                     predictions.append({
                         'symbol': stock_symbol,
                         'error': 'Not enough data for prediction'
                     })
                     continue
 
-                # Determine the target date for prediction
                 if prediction_date:
-                    # Find the data points before the prediction date
                     stock_entries = [
-                        entry for entry in stock_entries if entry['date'] < prediction_date
+                        entry for entry in stock_entries
+                        if entry['date'] < prediction_date
                     ]
                 else:
-                    # Use the latest date
                     prediction_date = stock_entries[0]['date']
 
-                # Ensure at least 6 data points exist before the target date
-                if len(stock_entries) < 6:
+                if len(stock_entries) < MIN_DATA_POINTS_REQUIRED:
                     predictions.append({
                         'symbol': stock_symbol,
                         'error': f'Not enough data before {prediction_date} for prediction'
                     })
                     continue
 
-                # Take the latest 6 entries for prediction
-                stock_data = stock_entries[:6]
+                recent_stock_data = stock_entries[:MIN_DATA_POINTS_REQUIRED]
 
-                # Prepare data for prediction
-                data = np.array([[d['open_price'], d['high_price'], d['low_price'], 
-                                  d['close_price'], d['total_traded_quantity']] for d in stock_data])
+                feature_matrix = np.array([[
+                    d['open_price'], d['high_price'], d['low_price'],
+                    d['close_price'], d['total_traded_quantity']
+                ] for d in recent_stock_data])
 
-                # Normalize the data
-                normalized_data = scaler.fit_transform(data)
+                normalized_data = scaler.fit_transform(feature_matrix)
 
-                # Prepare data for LSTM (3D input: [samples, time_steps, features])
-                X_lstm = normalized_data.reshape((1, 6, 5))  # Last 6 days, 5 features
+                lstm_input = normalized_data.reshape((1, TIME_STEPS, FEATURE_COUNT))
+                lstm_prediction = lstm_model.predict(lstm_input)
 
-                # Predict using the LSTM model
-                predicted_lstm_price = lstm_model.predict(X_lstm)
+                rf_input = normalized_data[-TIME_STEPS:].reshape(1, -1)
+                rf_prediction = rf_model.predict(rf_input)
 
-                # Prepare data for Random Forest (Flatten 6 days of data into 1D: [samples, features])
-                X_rf = normalized_data[-6:].reshape(1, -1)  # Flatten to 1 row with 30 features
+                lstm_predicted_close_price = self._inverse_transform_prediction(
+                    scaler, lstm_prediction, CLOSE_PRICE_INDEX
+                )
+                rf_predicted_close_price = self._inverse_transform_prediction(
+                    scaler, rf_prediction, CLOSE_PRICE_INDEX
+                )
 
-                # Predict using the Random Forest model
-                predicted_rf_price = rf_model.predict(X_rf)
-
-                # Inverse transform LSTM prediction
-                data_padded_lstm = np.zeros((1, 5))  # Placeholder with 5 features
-                data_padded_lstm[:, 3] = predicted_lstm_price.flatten()  # Set predicted 'close_price'
-                predicted_lstm_close_price = scaler.inverse_transform(data_padded_lstm)[0, 3]
-
-                # Inverse transform Random Forest prediction
-                data_padded_rf = np.zeros((1, 5))  # Placeholder with 5 features
-                data_padded_rf[:, 3] = predicted_rf_price.flatten()  # Set predicted 'close_price'
-                predicted_rf_close_price = scaler.inverse_transform(data_padded_rf)[0, 3]
-
-                # Append the predictions to the list
                 predictions.append({
                     'symbol': stock_symbol,
-                    'predicted_lstm_close_price': predicted_lstm_close_price,
-                    'predicted_rf_close_price': predicted_rf_close_price,
+                    'predicted_lstm_close_price': lstm_predicted_close_price,
+                    'predicted_rf_close_price': rf_predicted_close_price,
                     'date': prediction_date
                 })
 
-                # Update the database with the predicted close prices for the target date
-                stock_data_obj = stockData.objects.filter(
-                    stock__symbol=stock_symbol, date=prediction_date
-                ).first()
-                if stock_data_obj:
-                    stock_data_obj.LTSM_predicted_close_price = predicted_lstm_close_price
-                    stock_data_obj.RF_predicted_close_price = predicted_rf_close_price
-                    stock_data_obj.save()
+                self._update_database_predictions(
+                    stock_data_model, stock_symbol, prediction_date,
+                    lstm_predicted_close_price, rf_predicted_close_price
+                )
 
-            # Return the predictions
             return {'predictions': predictions}
 
         except Exception as e:
             return {'error': str(e)}
+
+    def _inverse_transform_prediction(self, scaler, prediction, close_price_index):
+        padded_data = np.zeros((1, FEATURE_COUNT))
+        padded_data[:, close_price_index] = prediction.flatten()
+        return scaler.inverse_transform(padded_data)[0, close_price_index]
+
+    def _update_database_predictions(
+        self, stock_data_model, stock_symbol, target_date,
+        lstm_predicted_price, rf_predicted_price
+    ):
+        stock_data_instance = stock_data_model.objects.filter(
+            stock__symbol=stock_symbol, date=target_date
+        ).first()
+        if stock_data_instance:
+            stock_data_instance.LSTM_predicted_close_price = lstm_predicted_price
+            stock_data_instance.RF_predicted_close_price = rf_predicted_price
+            stock_data_instance.save()
