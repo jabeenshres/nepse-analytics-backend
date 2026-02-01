@@ -16,6 +16,9 @@ class Stock(models.Model):
     RF_R_Square = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
     Overall_RF_R_Square = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
 
+    class Meta:
+        app_label = 'StockData'
+
     def __str__(self):
         return self.symbol
 
@@ -41,4 +44,5 @@ class StockData(models.Model):
         return f"{self.stock.symbol} - {self.date}"
 
     class Meta:
+        app_label = 'StockData'
         ordering = ['-date']

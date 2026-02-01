@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'stock_data',
     'predictions',
     'accounts',
+    'StockData.apps.StockDataConfig',  # Temporarily added for data migration - can be removed after migration
 ]
 
 MIDDLEWARE = [
@@ -161,7 +162,11 @@ REST_FRAMEWORK = {
         # 'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_PAGINATION_CLASS': 'stock_BE.pagination.StandardResultsSetPagination',
-
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
 }
 # Rest Framework End
 

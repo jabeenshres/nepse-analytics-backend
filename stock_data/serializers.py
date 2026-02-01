@@ -85,12 +85,36 @@ class StockSerializer(serializers.ModelSerializer):
 
 class StockListSerializer(serializers.ModelSerializer):
     """
-    Serializer for Stock model with nested stock data.
+    Serializer for Stock model with limited nested stock data.
     
-    Used for listing stocks with their associated data.
+    Used for listing stocks with their most recent data entries only.
+    By default, includes only the latest 5 entries to prevent large responses.
     """
-    data = StockDataSerializer(many=True, read_only=True)
+    data = serializers.SerializerMethodField()
+    data_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Stock
         fields = '__all__'
+
+    def get_data(self, obj):
+        """
+        Get limited stock data entries (latest 5 by default).
+        
+        Can be controlled via context:
+        - include_data: bool - Whether to include nested data
+        - data_limit: int - Number of entries to include (default: 5)
+        """
+        include_data = self.context.get('include_data', True)
+        data_limit = self.context.get('data_limit', 5)
+        
+        if not include_data:
+            return []
+        
+        # Get latest entries, limited by data_limit
+        stock_data = obj.data.all()[:data_limit]
+        return StockDataSerializer(stock_data, many=True).data
+
+    def get_data_count(self, obj):
+        """Get total count of stock data entries for this stock."""
+        return obj.data.count()

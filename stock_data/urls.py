@@ -15,9 +15,11 @@ router_stock = DefaultRouter()
 router_stock.register(r"", StockViewSet, basename="stock")
 
 urlpatterns = [
-    path('entries/', include(router_stock_data.urls)),
-    path('', include(router_stock.urls)),
+    # Specific paths must come before router includes to avoid conflicts
     path('fetch/', LoadStockDataView.as_view(), name='fetch-stock-data'),
     path('structured/', StructuredDataView.as_view(), name='structured-data'),
     path('latest/', LatestStockDataViewSet.as_view({'get': 'list'}), name='latest-stock-data'),
+    # Router includes
+    path('entries/', include(router_stock_data.urls)),
+    path('', include(router_stock.urls)),
 ]

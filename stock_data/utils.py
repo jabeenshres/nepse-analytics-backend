@@ -206,6 +206,114 @@ class NepalStockScraper:
             logger.error(f"Error while looping through dates: {e}")
             raise
 
+    def loop_through_date_range(self, Stock, StockData, date_from, date_to):
+        """
+        Loop through a date range and download stock data, skipping dates that already have data.
+        
+        Args:
+            Stock: Stock model class
+            StockData: StockData model class
+            date_from: Start date (date object)
+            date_to: End date (date object)
+        
+        Returns:
+            dict: Statistics about the operation
+        """
+        stats = {
+            'total_dates': 0,
+            'dates_processed': 0,
+            'dates_skipped': 0,
+            'dates_failed': 0,
+            'stocks_created': 0,
+            'stocks_updated': 0,
+        }
+        
+        try:
+            # Ensure we have date objects
+            if isinstance(date_from, datetime):
+                date_from_obj = date_from.date()
+            else:
+                date_from_obj = date_from
+            
+            if isinstance(date_to, datetime):
+                date_to_obj = date_to.date()
+                current_date = date_to
+            else:
+                date_to_obj = date_to
+                current_date = datetime.combine(date_to_obj, datetime.min.time())
+            
+            # Calculate total dates in range
+            total_days = (date_to_obj - date_from_obj).days + 1
+            stats['total_dates'] = total_days
+            
+            logger.info(
+                f"Starting data fetch from {date_from_obj} to {date_to_obj} "
+                f"({total_days} days)"
+            )
+            
+            # Get all existing dates in the range to skip
+            existing_dates = set(
+                StockData.objects.filter(
+                    date__gte=date_from_obj,
+                    date__lte=date_to_obj
+                ).values_list('date', flat=True).distinct()
+            )
+            logger.info(f"Found {len(existing_dates)} dates with existing data")
+
+            while current_date.date() >= date_from_obj:
+                date_str = current_date.strftime(NEPAL_STOCK_DATE_FORMAT)
+                date_obj = current_date.date()
+                
+                # Check if data already exists for this date
+                if date_obj in existing_dates:
+                    stats['dates_skipped'] += 1
+                    logger.info(
+                        f"Skipping date {date_str} - data already exists in database"
+                    )
+                    current_date -= timedelta(days=1)
+                    continue
+                
+                logger.info(f"Processing data for date: {date_str}")
+                try:
+                    self.change_date(date_str)
+                    if self.check_content():
+                        logger.info("Content found. Attempting to download CSV.")
+                        self.download_csv()
+                        if self.download_wait() >= 0:
+                            downloaded_files = os.listdir(self.temp_dir)
+                            if downloaded_files:
+                                latest_file = self.get_latest_file()
+                                save_stats = self.save_to_database(
+                                    latest_file, Stock, StockData
+                                )
+                                stats['stocks_created'] += save_stats.get('created', 0)
+                                stats['stocks_updated'] += save_stats.get('updated', 0)
+                                os.remove(latest_file)
+                                stats['dates_processed'] += 1
+                                logger.info(f"Successfully processed date: {date_str}")
+                            else:
+                                logger.warning(f"No files found for date {date_str}.")
+                                stats['dates_failed'] += 1
+                    else:
+                        logger.warning(f"No content available for date: {date_str}.")
+                        stats['dates_failed'] += 1
+                except Exception as e:
+                    logger.error(f"Error processing date {date_str}: {e}")
+                    stats['dates_failed'] += 1
+                
+                current_date -= timedelta(days=1)
+
+            logger.info(
+                f"Completed date range processing. "
+                f"Processed: {stats['dates_processed']}, "
+                f"Skipped: {stats['dates_skipped']}, "
+                f"Failed: {stats['dates_failed']}"
+            )
+            return stats
+        except Exception as e:
+            logger.error(f"Error while looping through date range: {e}")
+            raise
+
     def save_to_database(self, file_path, Stock, StockData):
         """
         Save CSV data to database.
@@ -215,9 +323,13 @@ class NepalStockScraper:
             Stock: Stock model class
             StockData: StockData model class
         
+        Returns:
+            dict: Statistics with 'created' and 'updated' counts
+        
         Raises:
             Exception: If saving to database fails
         """
+        stats = {'created': 0, 'updated': 0}
         try:
             dataframe = pd.read_csv(file_path, on_bad_lines="skip")
             dataframe.columns = dataframe.columns.str.strip().str.lower()
@@ -226,7 +338,7 @@ class NepalStockScraper:
             for _, row in dataframe.iterrows():
                 row = row.where(pd.notna(row), None)
 
-                stock, created = Stock.objects.get_or_create(
+                stock, stock_created = Stock.objects.get_or_create(
                     symbol=row['symbol'],
                     security_id=row['security id'],
                     security_name=row['security name'],
@@ -235,8 +347,11 @@ class NepalStockScraper:
                         "fifty_two_weeks_low": row['fifty two week low'] or 0.0,
                     }
                 )
+                
+                if stock_created:
+                    stats['created'] += 1
 
-                StockData.objects.update_or_create(
+                stock_data, data_created = StockData.objects.update_or_create(
                     stock=stock,
                     date=row['business date'],
                     defaults={
@@ -256,9 +371,17 @@ class NepalStockScraper:
                         ),
                     }
                 )
+                
+                if not data_created:
+                    stats['updated'] += 1
+                
                 records_processed += 1
 
-            logger.info(f"Processed {records_processed} records from {file_path}")
+            logger.info(
+                f"Processed {records_processed} records from {file_path}. "
+                f"Created: {stats['created']}, Updated: {stats['updated']}"
+            )
+            return stats
         except Exception as e:
             logger.error(f"Error while saving data to the database: {e}")
             raise Exception(f"Error while saving data to the database: {e}")
