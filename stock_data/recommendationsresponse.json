@@ -1,0 +1,4315 @@
+{
+    "date": "2026-02-01",
+    "market_analysis": {
+        "data_available": true,
+        "trend": "neutral",
+        "sentiment": "neutral",
+        "trend_score": 10,
+        "analysis_period_days": 30,
+        "current": {
+            "date": "2026-02-01",
+            "close": 2694.2,
+            "daily_change_percent": -0.73
+        },
+        "period_statistics": {
+            "period_return_percent": 3.56,
+            "short_term_return_percent": -2.7,
+            "medium_term_return_percent": 0.81,
+            "avg_daily_change_percent": 0.127,
+            "volatility": 0.792,
+            "positive_days": 17,
+            "negative_days": 13,
+            "unchanged_days": 0,
+            "positive_ratio_percent": 56.7
+        },
+        "52_week_analysis": {
+            "high": 3002.07,
+            "low": 2487.17,
+            "distance_from_high_percent": 10.26,
+            "distance_from_low_percent": 8.32,
+            "position": "near_low"
+        },
+        "volume_analysis": {
+            "avg_daily_volume": 14043512,
+            "avg_daily_turnover": 7127706318.81,
+            "recent_volume": 19120133,
+            "volume_trend": "normal"
+        }
+    },
+    "market_suggestion": {
+        "overall_advice": "SELECTIVE_BUY",
+        "confidence": "medium",
+        "reason": "Market is range-bound. Be selective with stock picks. Short-term momentum is negative - be cautious.",
+        "strategy": "Focus on individual stock fundamentals. Avoid aggressive positions.",
+        "risk_level": "moderate",
+        "recommended_allocation": {
+            "equity": "50-60%",
+            "cash": "40-50%"
+        },
+        "sector_preference": [
+            "Defensive sectors",
+            "Dividend stocks"
+        ],
+        "position_context": "Market near 52-week lows. Could be buying opportunity if trend reverses."
+    },
+    "summary": {
+        "total_analyzed": 314,
+        "after_filtering": 228,
+        "strong_buy_count": 4,
+        "buy_count": 20,
+        "watch_count": 20,
+        "hold_count": 0,
+        "sell_count": 0
+    },
+    "filters_applied": {
+        "exclude_mutual_funds": true,
+        "exclude_debentures": true,
+        "min_score": 40.0,
+        "analysis_days": 30
+    },
+    "top_picks": [
+        {
+            "rank": 1,
+            "symbol": "USHEC",
+            "security_name": "Upper Solu Hydro Electric Company Limited",
+            "current_price": 485.1,
+            "combined_score": 87,
+            "conviction_score": 133.2,
+            "market_adjusted": false,
+            "volume_ratio": 4.04,
+            "unusual_days": 5,
+            "distance_to_resistance": 2.0,
+            "target_price": 495.0,
+            "stop_loss": 450.0,
+            "summary": "Extreme Volume 4.0X | Sustained Accumulation 5 Days | At Resistance Level",
+            "key_reasons": [
+                "Extreme volume spike (4.0x) indicates strong accumulation",
+                "Sustained accumulation for 5 days",
+                "At resistance level - breakout imminent"
+            ],
+            "position_size": "normal",
+            "upside_percent": 2.04,
+            "downside_percent": 7.24
+        },
+        {
+            "rank": 2,
+            "symbol": "MBJC",
+            "security_name": "Madhya Bhotekoshi Jalavidyut Company Limited",
+            "current_price": 291.5,
+            "combined_score": 88,
+            "conviction_score": 126.9,
+            "market_adjusted": false,
+            "volume_ratio": 4.09,
+            "unusual_days": 3,
+            "distance_to_resistance": 3.8,
+            "target_price": 303.0,
+            "stop_loss": 271.7,
+            "summary": "Extreme Volume 4.1X | Sustained Accumulation 3 Days | Near Resistance",
+            "key_reasons": [
+                "Extreme volume spike (4.1x) indicates strong accumulation",
+                "Multiple days (3) of unusual activity",
+                "Near resistance - watch for breakout"
+            ],
+            "position_size": "normal",
+            "upside_percent": 3.95,
+            "downside_percent": 6.79
+        },
+        {
+            "rank": 3,
+            "symbol": "NIL",
+            "security_name": "Neco Insurance Limited",
+            "current_price": 650.0,
+            "combined_score": 81,
+            "conviction_score": 123.2,
+            "market_adjusted": false,
+            "volume_ratio": 3.62,
+            "unusual_days": 4,
+            "distance_to_resistance": 1.95,
+            "target_price": 662.9,
+            "stop_loss": 603.0,
+            "summary": "Extreme Volume 3.6X | Sustained Accumulation 4 Days | At Resistance Level",
+            "key_reasons": [
+                "High volume (3.6x) suggests institutional interest",
+                "Multiple days (4) of unusual activity",
+                "At resistance level - breakout imminent"
+            ],
+            "position_size": "normal",
+            "upside_percent": 1.98,
+            "downside_percent": 7.23
+        },
+        {
+            "rank": 4,
+            "symbol": "RBCLPO",
+            "security_name": "Rastriya Beema Company Limited Promoter Share",
+            "current_price": 12030.0,
+            "combined_score": 79,
+            "conviction_score": 122.2,
+            "market_adjusted": false,
+            "volume_ratio": 4.08,
+            "unusual_days": 3,
+            "distance_to_resistance": 1.62,
+            "target_price": 12228.0,
+            "stop_loss": 11655.0,
+            "summary": "Extreme Volume 4.1X | Sustained Accumulation 3 Days | At Resistance Level",
+            "key_reasons": [
+                "Extreme volume spike (4.1x) indicates strong accumulation",
+                "Multiple days (3) of unusual activity",
+                "At resistance level - breakout imminent"
+            ],
+            "position_size": "normal",
+            "upside_percent": 1.65,
+            "downside_percent": 3.12
+        },
+        {
+            "rank": 5,
+            "symbol": "NGPL",
+            "security_name": "Ngadi Group Power Ltd.",
+            "current_price": 423.0,
+            "combined_score": 86,
+            "conviction_score": 120.0,
+            "market_adjusted": false,
+            "volume_ratio": 2.29,
+            "unusual_days": 5,
+            "distance_to_resistance": 3.73,
+            "target_price": 439.4,
+            "stop_loss": 381.3,
+            "summary": "High Volume 2.3X | Sustained Accumulation 5 Days | Near Resistance",
+            "key_reasons": [
+                "Above average volume (2.3x)",
+                "Sustained accumulation for 5 days",
+                "Near resistance - watch for breakout"
+            ],
+            "position_size": "normal",
+            "upside_percent": 3.88,
+            "downside_percent": 9.86
+        }
+    ],
+    "strong_buy": [
+        {
+            "symbol": "MBJC",
+            "security_name": "Madhya Bhotekoshi Jalavidyut Company Limited",
+            "combined_score": 88,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 291.5,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 31,
+                "momentum": 25
+            },
+            "key_metrics": {
+                "max_volume_ratio": 4.09,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 3.8,
+                "sma_20": 286.72,
+                "resistance": 303.0,
+                "support": 271.7
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_4.1x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 294.0,
+                    "volume_ratio": 2.38,
+                    "price_change": 1.73,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 295.0,
+                    "volume_ratio": 4.09,
+                    "price_change": 1.03,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 288.0,
+                    "volume_ratio": 4.07,
+                    "price_change": -2.37,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 4.1X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 88,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 291.5,
+                "target_price": 303.0,
+                "stop_loss": 271.7,
+                "upside_percent": 3.95,
+                "downside_percent": 6.79,
+                "risk_reward_ratio": 0.58,
+                "position_size": "normal",
+                "reasons": [
+                    "Extreme volume spike (4.1x) indicates strong accumulation",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "STRONG_BUY",
+            "action": "Buy now - Breakout imminent",
+            "conviction_score": 126.85000000000001
+        },
+        {
+            "symbol": "USHEC",
+            "security_name": "Upper Solu Hydro Electric Company Limited",
+            "combined_score": 87,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 485.1,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 32,
+                "momentum": 20
+            },
+            "key_metrics": {
+                "max_volume_ratio": 4.04,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 2.0,
+                "sma_20": 468.25,
+                "resistance": 495.0,
+                "support": 450.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_4.0x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_1.5%",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-21",
+                    "price": 468.9,
+                    "volume_ratio": 1.57,
+                    "price_change": -0.21,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 478.0,
+                    "volume_ratio": 3.82,
+                    "price_change": 1.49,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 485.0,
+                    "volume_ratio": 1.71,
+                    "price_change": 1.46,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 4.0X | Sustained Accumulation 5 Days | At Resistance Level",
+            "adjusted_score": 87,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 485.1,
+                "target_price": 495.0,
+                "stop_loss": 450.0,
+                "upside_percent": 2.04,
+                "downside_percent": 7.24,
+                "risk_reward_ratio": 0.28,
+                "position_size": "normal",
+                "reasons": [
+                    "Extreme volume spike (4.0x) indicates strong accumulation",
+                    "Sustained accumulation for 5 days",
+                    "At resistance level - breakout imminent",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "STRONG_BUY",
+            "action": "Buy now - Breakout imminent",
+            "conviction_score": 133.2
+        },
+        {
+            "symbol": "NGPL",
+            "security_name": "Ngadi Group Power Ltd.",
+            "combined_score": 86,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 423.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 28,
+                "momentum": 26
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.29,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 3.73,
+                "sma_20": 405.37,
+                "resistance": 439.4,
+                "support": 381.3
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.3x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_1.9%",
+                    "BULLISH_CANDLES",
+                    "INCREASING_TRADE_SIZE"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-26",
+                    "price": 421.0,
+                    "volume_ratio": 1.79,
+                    "price_change": 1.45,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 419.0,
+                    "volume_ratio": 1.82,
+                    "price_change": -0.48,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 430.0,
+                    "volume_ratio": 2.29,
+                    "price_change": 2.38,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.3X | Sustained Accumulation 5 Days | Near Resistance",
+            "adjusted_score": 86,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 423.0,
+                "target_price": 439.4,
+                "stop_loss": 381.3,
+                "upside_percent": 3.88,
+                "downside_percent": 9.86,
+                "risk_reward_ratio": 0.39,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.3x)",
+                    "Sustained accumulation for 5 days",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "STRONG_BUY",
+            "action": "Buy now - Breakout imminent",
+            "conviction_score": 119.99000000000001
+        },
+        {
+            "symbol": "CYCL",
+            "security_name": "CYC Nepal Laghubitta Bittiya Sanstha Limited",
+            "combined_score": 85,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 1578.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 28,
+                "momentum": 25
+            },
+            "key_metrics": {
+                "max_volume_ratio": 3.44,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 4.19,
+                "sma_20": 1562.25,
+                "resistance": 1647.0,
+                "support": 1505.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_3.4x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-22",
+                    "price": 1573.9,
+                    "volume_ratio": 2.8,
+                    "price_change": 2.13,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 1600.0,
+                    "volume_ratio": 2.83,
+                    "price_change": 1.66,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 1580.0,
+                    "volume_ratio": 3.44,
+                    "price_change": -1.62,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 3.4X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 85,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 1578.0,
+                "target_price": 1647.0,
+                "stop_loss": 1505.0,
+                "upside_percent": 4.37,
+                "downside_percent": 4.63,
+                "risk_reward_ratio": 0.94,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (3.4x) suggests institutional interest",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "STRONG_BUY",
+            "action": "Buy now - Breakout imminent",
+            "conviction_score": 119.82000000000001
+        }
+    ],
+    "buy": [
+        {
+            "symbol": "CREST",
+            "security_name": "Crest Micro Life Insurance Limited",
+            "combined_score": 90,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 1568.7,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 28,
+                "momentum": 30
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.35,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 0.0,
+                "sma_20": 1326.54,
+                "resistance": 1568.7,
+                "support": 1181.1
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.4x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_4.9%",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-21",
+                    "price": 1305.0,
+                    "volume_ratio": 1.68,
+                    "price_change": 1.16,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 1490.0,
+                    "volume_ratio": 2.35,
+                    "price_change": -0.33,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 1490.0,
+                    "volume_ratio": 1.77,
+                    "price_change": 0.0,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.4X | Sustained Accumulation 3 Days | At Resistance Level",
+            "adjusted_score": 90,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 1568.7,
+                "target_price": 1568.7,
+                "stop_loss": 1181.1,
+                "upside_percent": 0.0,
+                "downside_percent": 24.71,
+                "risk_reward_ratio": null,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.4x)",
+                    "Multiple days (3) of unusual activity",
+                    "At resistance level - breakout imminent",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Consider buying - Strong signals",
+            "conviction_score": 107.75
+        },
+        {
+            "symbol": "NIFRAUR85/86",
+            "security_name": "NIFRA Uraj Rinpatra7%-2085/86",
+            "combined_score": 90,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 1128.0,
+            "date": "2025-12-15",
+            "score_breakdown": {
+                "accumulation": 31,
+                "breakout_readiness": 32,
+                "momentum": 27
+            },
+            "key_metrics": {
+                "max_volume_ratio": 3.73,
+                "unusual_days_count": 2,
+                "distance_to_resistance": 0.0,
+                "sma_20": 1066.54,
+                "resistance": 1128.0,
+                "support": 1030.2
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_3.7x",
+                    "VERY_STABLE_PRICE",
+                    "ACCUMULATION_2_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "STRONG_MOMENTUM_5.8%",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2025-11-30",
+                    "price": 1065.9,
+                    "volume_ratio": 2.05,
+                    "price_change": 2.39,
+                    "is_green": true
+                },
+                {
+                    "date": "2025-12-15",
+                    "price": 1128.0,
+                    "volume_ratio": 3.73,
+                    "price_change": 0.36,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 3.7X | Accumulation 2 Days | At Resistance Level",
+            "adjusted_score": 90,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 1128.0,
+                "target_price": 1128.0,
+                "stop_loss": 1030.2,
+                "upside_percent": 0.0,
+                "downside_percent": 8.67,
+                "risk_reward_ratio": null,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (3.7x) suggests institutional interest",
+                    "At resistance level - breakout imminent",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 112.65
+        },
+        {
+            "symbol": "HEIP",
+            "security_name": "Himalayan Everest Insurance Limited Promoter",
+            "combined_score": 83,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 323.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 29,
+                "breakout_readiness": 28,
+                "momentum": 26
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.45,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 3.87,
+                "sma_20": 320.03,
+                "resistance": 336.0,
+                "support": 298.3
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.5x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_1.6%",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 318.0,
+                    "volume_ratio": 2.28,
+                    "price_change": 0.54,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 313.9,
+                    "volume_ratio": 2.45,
+                    "price_change": -3.12,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 317.0,
+                    "volume_ratio": 1.61,
+                    "price_change": -0.91,
+                    "is_green": false
+                }
+            ],
+            "summary": "High Volume 2.5X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 83,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 323.0,
+                "target_price": 336.0,
+                "stop_loss": 298.3,
+                "upside_percent": 4.02,
+                "downside_percent": 7.65,
+                "risk_reward_ratio": 0.53,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.5x)",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Consider buying - Strong signals",
+            "conviction_score": 113.51
+        },
+        {
+            "symbol": "PPCL",
+            "security_name": "Panchthar Power Compant Limited",
+            "combined_score": 83,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 375.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 29,
+                "breakout_readiness": 24,
+                "momentum": 30
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.32,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 4.58,
+                "sma_20": 358.73,
+                "resistance": 393.0,
+                "support": 341.0
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.3x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_1.9%",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-26",
+                    "price": 375.0,
+                    "volume_ratio": 2.32,
+                    "price_change": 1.93,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 362.0,
+                    "volume_ratio": 2.22,
+                    "price_change": -3.47,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 384.0,
+                    "volume_ratio": 1.95,
+                    "price_change": 1.05,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.3X | Sustained Accumulation 5 Days | Near Resistance",
+            "adjusted_score": 83,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 375.0,
+                "target_price": 393.0,
+                "stop_loss": 341.0,
+                "upside_percent": 4.8,
+                "downside_percent": 9.07,
+                "risk_reward_ratio": 0.53,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.3x)",
+                    "Sustained accumulation for 5 days",
+                    "Near resistance - watch for breakout",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 115.44
+        },
+        {
+            "symbol": "SMJC",
+            "security_name": "Sagarmatha Jalabidhyut Company Limited",
+            "combined_score": 83,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 498.7,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 27,
+                "momentum": 21
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.69,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 3.17,
+                "sma_20": 493.88,
+                "resistance": 515.0,
+                "support": 479.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.7x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 497.0,
+                    "volume_ratio": 1.8,
+                    "price_change": 1.02,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-21",
+                    "price": 500.0,
+                    "volume_ratio": 2.69,
+                    "price_change": 0.6,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 504.0,
+                    "volume_ratio": 1.61,
+                    "price_change": 1.41,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 2.7X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 83,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 498.7,
+                "target_price": 515.0,
+                "stop_loss": 479.0,
+                "upside_percent": 3.27,
+                "downside_percent": 3.95,
+                "risk_reward_ratio": 0.83,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.7x) suggests institutional interest",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Consider buying - Strong signals",
+            "conviction_score": 116.11
+        },
+        {
+            "symbol": "DLBS",
+            "security_name": "Dhaulagiri Laghubitta Bittiya Sanstha Limited",
+            "combined_score": 82,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 1369.9,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 25,
+                "momentum": 25
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.79,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 3.53,
+                "sma_20": 1348.18,
+                "resistance": 1420.0,
+                "support": 1290.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.8x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_INCREASING",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-22",
+                    "price": 1356.6,
+                    "volume_ratio": 1.65,
+                    "price_change": -0.24,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 1383.5,
+                    "volume_ratio": 2.79,
+                    "price_change": 1.98,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 1393.8,
+                    "volume_ratio": 1.53,
+                    "price_change": -0.09,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 2.8X | Sustained Accumulation 5 Days | Near Resistance",
+            "adjusted_score": 82,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 1369.9,
+                "target_price": 1420.0,
+                "stop_loss": 1290.0,
+                "upside_percent": 3.66,
+                "downside_percent": 5.83,
+                "risk_reward_ratio": 0.63,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.8x) suggests institutional interest",
+                    "Sustained accumulation for 5 days",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 118.89
+        },
+        {
+            "symbol": "DOLTI",
+            "security_name": "Dolti Power Company Limited",
+            "combined_score": 82,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 530.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 24,
+                "momentum": 26
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.62,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 6.19,
+                "sma_20": 520.16,
+                "resistance": 565.0,
+                "support": 500.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.6x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_1.0%",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 518.0,
+                    "volume_ratio": 2.62,
+                    "price_change": 1.77,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 525.0,
+                    "volume_ratio": 2.51,
+                    "price_change": 2.14,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 543.0,
+                    "volume_ratio": 1.6,
+                    "price_change": -2.16,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 2.6X | Sustained Accumulation 3 Days | Institutional Buying",
+            "adjusted_score": 82,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 530.0,
+                "target_price": 565.0,
+                "stop_loss": 500.0,
+                "upside_percent": 6.6,
+                "downside_percent": 5.66,
+                "risk_reward_ratio": 1.17,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.6x) suggests institutional interest",
+                    "Multiple days (3) of unusual activity",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Consider buying - Strong signals",
+            "conviction_score": 108.72
+        },
+        {
+            "symbol": "GLH",
+            "security_name": "GreenLife Hydropower Limited",
+            "combined_score": 82,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 268.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 29,
+                "breakout_readiness": 28,
+                "momentum": 25
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.45,
+                "unusual_days_count": 7,
+                "distance_to_resistance": 3.94,
+                "sma_20": 255.08,
+                "resistance": 279.0,
+                "support": 239.7
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.4x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_7_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-26",
+                    "price": 268.0,
+                    "volume_ratio": 1.77,
+                    "price_change": -1.11,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 262.0,
+                    "volume_ratio": 2.38,
+                    "price_change": -2.24,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 264.0,
+                    "volume_ratio": 2.45,
+                    "price_change": 1.15,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.4X | Sustained Accumulation 7 Days | Near Resistance",
+            "adjusted_score": 82,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 268.0,
+                "target_price": 279.0,
+                "stop_loss": 239.7,
+                "upside_percent": 4.1,
+                "downside_percent": 10.56,
+                "risk_reward_ratio": 0.39,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.5x)",
+                    "Sustained accumulation for 7 days",
+                    "Near resistance - watch for breakout",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 116.37
+        },
+        {
+            "symbol": "NIL",
+            "security_name": "Neco Insurance Limited",
+            "combined_score": 81,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 650.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 35,
+                "momentum": 11
+            },
+            "key_metrics": {
+                "max_volume_ratio": 3.62,
+                "unusual_days_count": 4,
+                "distance_to_resistance": 1.95,
+                "sma_20": 632.9,
+                "resistance": 662.9,
+                "support": 603.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_3.6x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_4_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 642.0,
+                    "volume_ratio": 1.83,
+                    "price_change": 1.78,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-21",
+                    "price": 645.0,
+                    "volume_ratio": 1.56,
+                    "price_change": 0.47,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 655.0,
+                    "volume_ratio": 1.69,
+                    "price_change": 1.41,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 3.6X | Sustained Accumulation 4 Days | At Resistance Level",
+            "adjusted_score": 81,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 650.0,
+                "target_price": 662.9,
+                "stop_loss": 603.0,
+                "upside_percent": 1.98,
+                "downside_percent": 7.23,
+                "risk_reward_ratio": 0.27,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (3.6x) suggests institutional interest",
+                    "Multiple days (4) of unusual activity",
+                    "At resistance level - breakout imminent",
+                    "Strong accumulation pattern detected"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 123.19999999999999
+        },
+        {
+            "symbol": "EBLD86",
+            "security_name": "Everest Bank Limited",
+            "combined_score": 80,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 1150.0,
+            "date": "2026-01-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 35,
+                "momentum": 10
+            },
+            "key_metrics": {
+                "max_volume_ratio": 5.13,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 0.0,
+                "sma_20": 1114.12,
+                "resistance": 1150.0,
+                "support": 1101.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_5.1x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_2.6%"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2025-12-24",
+                    "price": 1125.0,
+                    "volume_ratio": 2.62,
+                    "price_change": 0.36,
+                    "is_green": true
+                },
+                {
+                    "date": "2025-12-29",
+                    "price": 1125.0,
+                    "volume_ratio": 1.77,
+                    "price_change": 1.53,
+                    "is_green": true
+                },
+                {
+                    "date": "2025-12-31",
+                    "price": 1150.0,
+                    "volume_ratio": 5.13,
+                    "price_change": 2.22,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 5.1X | Sustained Accumulation 3 Days | At Resistance Level",
+            "adjusted_score": 80,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 1150.0,
+                "target_price": 1150.0,
+                "stop_loss": 1101.0,
+                "upside_percent": 0.0,
+                "downside_percent": 4.26,
+                "risk_reward_ratio": null,
+                "position_size": "normal",
+                "reasons": [
+                    "Extreme volume spike (5.1x) indicates strong accumulation",
+                    "Multiple days (3) of unusual activity",
+                    "At resistance level - breakout imminent",
+                    "Strong accumulation pattern detected"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 111.0
+        },
+        {
+            "symbol": "HURJA",
+            "security_name": "Himalaya Urja Bikas Company Limited",
+            "combined_score": 80,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 257.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 28,
+                "momentum": 20
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.55,
+                "unusual_days_count": 6,
+                "distance_to_resistance": 1.53,
+                "sma_20": 230.58,
+                "resistance": 261.0,
+                "support": 218.3
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.5x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_6_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_4.5%",
+                    "BULLISH_CANDLES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 246.0,
+                    "volume_ratio": 2.24,
+                    "price_change": 3.58,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 242.9,
+                    "volume_ratio": 2.18,
+                    "price_change": -1.26,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-02-01",
+                    "price": 257.0,
+                    "volume_ratio": 2.06,
+                    "price_change": 3.63,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 2.5X | Sustained Accumulation 6 Days | At Resistance Level",
+            "adjusted_score": 80,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 257.0,
+                "target_price": 261.0,
+                "stop_loss": 218.3,
+                "upside_percent": 1.56,
+                "downside_percent": 15.06,
+                "risk_reward_ratio": 0.1,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.5x) suggests institutional interest",
+                    "Sustained accumulation for 6 days",
+                    "At resistance level - breakout imminent",
+                    "Strong accumulation pattern detected",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 119.69
+        },
+        {
+            "symbol": "MHCL",
+            "security_name": "Molung Hydropower Company Limited",
+            "combined_score": 80,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 392.5,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 24,
+                "momentum": 21
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.55,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 4.73,
+                "sma_20": 389.03,
+                "resistance": 412.0,
+                "support": 373.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.5x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 402.0,
+                    "volume_ratio": 2.55,
+                    "price_change": 3.08,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 398.9,
+                    "volume_ratio": 2.04,
+                    "price_change": -0.77,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 400.0,
+                    "volume_ratio": 1.97,
+                    "price_change": 0.13,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 2.5X | Sustained Accumulation 5 Days | Near Resistance",
+            "adjusted_score": 80,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 392.5,
+                "target_price": 412.0,
+                "stop_loss": 373.0,
+                "upside_percent": 4.97,
+                "downside_percent": 4.97,
+                "risk_reward_ratio": 1.0,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.5x) suggests institutional interest",
+                    "Sustained accumulation for 5 days",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 113.28999999999999
+        },
+        {
+            "symbol": "SJCL",
+            "security_name": "SANJEN JALAVIDHYUT COMPANY LIMITED",
+            "combined_score": 80,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 298.4,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 24,
+                "momentum": 21
+            },
+            "key_metrics": {
+                "max_volume_ratio": 3.25,
+                "unusual_days_count": 7,
+                "distance_to_resistance": 5.27,
+                "sma_20": 290.09,
+                "resistance": 315.0,
+                "support": 278.7
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_3.3x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_7_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-27",
+                    "price": 299.1,
+                    "volume_ratio": 3.25,
+                    "price_change": 0.88,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-28",
+                    "price": 303.9,
+                    "volume_ratio": 1.63,
+                    "price_change": 1.6,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 300.0,
+                    "volume_ratio": 2.99,
+                    "price_change": -1.28,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 3.3X | Sustained Accumulation 7 Days | Institutional Buying",
+            "adjusted_score": 80,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 298.4,
+                "target_price": 315.0,
+                "stop_loss": 278.7,
+                "upside_percent": 5.56,
+                "downside_percent": 6.6,
+                "risk_reward_ratio": 0.84,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (3.2x) suggests institutional interest",
+                    "Sustained accumulation for 7 days",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 115.71000000000001
+        },
+        {
+            "symbol": "BNHC",
+            "security_name": "Buddha Bhumi Nepal Hydropower Company Limited",
+            "combined_score": 79,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 564.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 20,
+                "momentum": 27
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.86,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 5.21,
+                "sma_20": 487.41,
+                "resistance": 595.0,
+                "support": 433.1
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.9x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "STRONG_MOMENTUM_7.5%",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 524.8,
+                    "volume_ratio": 2.86,
+                    "price_change": 3.69,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 528.0,
+                    "volume_ratio": 2.19,
+                    "price_change": 0.61,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 541.0,
+                    "volume_ratio": 2.17,
+                    "price_change": 2.46,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 2.9X | Sustained Accumulation 5 Days | Institutional Buying",
+            "adjusted_score": 79,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 564.0,
+                "target_price": 595.0,
+                "stop_loss": 433.1,
+                "upside_percent": 5.5,
+                "downside_percent": 23.21,
+                "risk_reward_ratio": 0.24,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.9x) suggests institutional interest",
+                    "Sustained accumulation for 5 days",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 112.88
+        },
+        {
+            "symbol": "RBCLPO",
+            "security_name": "Rastriya Beema Company Limited Promoter Share",
+            "combined_score": 79,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 12030.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 29,
+                "breakout_readiness": 35,
+                "momentum": 15
+            },
+            "key_metrics": {
+                "max_volume_ratio": 4.08,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 1.62,
+                "sma_20": 11947.75,
+                "resistance": 12228.0,
+                "support": 11655.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_4.1x",
+                    "MODERATE_PRICE_MOVE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 12200.0,
+                    "volume_ratio": 3.66,
+                    "price_change": 2.09,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 11962.0,
+                    "volume_ratio": 1.68,
+                    "price_change": -1.95,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 11800.0,
+                    "volume_ratio": 4.08,
+                    "price_change": -3.5,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 4.1X | Sustained Accumulation 3 Days | At Resistance Level",
+            "adjusted_score": 79,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 12030.0,
+                "target_price": 12228.0,
+                "stop_loss": 11655.0,
+                "upside_percent": 1.65,
+                "downside_percent": 3.12,
+                "risk_reward_ratio": 0.53,
+                "position_size": "normal",
+                "reasons": [
+                    "Extreme volume spike (4.1x) indicates strong accumulation",
+                    "Multiple days (3) of unusual activity",
+                    "At resistance level - breakout imminent",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 122.16
+        },
+        {
+            "symbol": "RHGCL",
+            "security_name": "Rapti Hydro And General Construction Limited",
+            "combined_score": 79,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 299.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 29,
+                "breakout_readiness": 20,
+                "momentum": 30
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.24,
+                "unusual_days_count": 4,
+                "distance_to_resistance": 5.95,
+                "sma_20": 269.39,
+                "resistance": 317.9,
+                "support": 238.1
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.2x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_4_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_3.1%",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 290.1,
+                    "volume_ratio": 2.02,
+                    "price_change": 2.04,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 292.9,
+                    "volume_ratio": 1.66,
+                    "price_change": 0.97,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 303.0,
+                    "volume_ratio": 1.52,
+                    "price_change": 1.68,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.2X | Sustained Accumulation 4 Days | Institutional Buying",
+            "adjusted_score": 79,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 299.0,
+                "target_price": 317.9,
+                "stop_loss": 238.1,
+                "upside_percent": 6.32,
+                "downside_percent": 20.37,
+                "risk_reward_ratio": 0.31,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.2x)",
+                    "Multiple days (4) of unusual activity",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 106.3
+        },
+        {
+            "symbol": "RIDI",
+            "security_name": "Ridi Power Company Limited",
+            "combined_score": 79,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 246.5,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 29,
+                "breakout_readiness": 24,
+                "momentum": 26
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.35,
+                "unusual_days_count": 6,
+                "distance_to_resistance": 3.33,
+                "sma_20": 229.91,
+                "resistance": 255.0,
+                "support": 218.0
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.3x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_6_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_0.6%",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-26",
+                    "price": 244.0,
+                    "volume_ratio": 1.66,
+                    "price_change": -0.41,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 237.0,
+                    "volume_ratio": 1.56,
+                    "price_change": -2.87,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 246.5,
+                    "volume_ratio": 2.25,
+                    "price_change": 3.14,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.3X | Sustained Accumulation 6 Days | Near Resistance",
+            "adjusted_score": 79,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 246.5,
+                "target_price": 255.0,
+                "stop_loss": 218.0,
+                "upside_percent": 3.45,
+                "downside_percent": 11.56,
+                "risk_reward_ratio": 0.3,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.4x)",
+                    "Sustained accumulation for 6 days",
+                    "Near resistance - watch for breakout",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 114.09
+        },
+        {
+            "symbol": "SIFC",
+            "security_name": "Shree Investment Finance Co. Ltd.",
+            "combined_score": 79,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 650.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 20,
+                "momentum": 27
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.86,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 5.44,
+                "sma_20": 553.11,
+                "resistance": 687.4,
+                "support": 492.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.9x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "STRONG_MOMENTUM_8.3%",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 600.0,
+                    "volume_ratio": 1.92,
+                    "price_change": 0.33,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 616.0,
+                    "volume_ratio": 2.55,
+                    "price_change": 2.67,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 607.0,
+                    "volume_ratio": 1.67,
+                    "price_change": -1.46,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 2.9X | Sustained Accumulation 5 Days | Institutional Buying",
+            "adjusted_score": 79,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 650.0,
+                "target_price": 687.4,
+                "stop_loss": 492.0,
+                "upside_percent": 5.75,
+                "downside_percent": 24.31,
+                "risk_reward_ratio": 0.24,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.9x) suggests institutional interest",
+                    "Sustained accumulation for 5 days",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 112.42
+        },
+        {
+            "symbol": "TAMOR",
+            "security_name": "Sanima Middle Tamor Hydropower Limited",
+            "combined_score": 79,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 451.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 19,
+                "momentum": 25
+            },
+            "key_metrics": {
+                "max_volume_ratio": 3.57,
+                "unusual_days_count": 4,
+                "distance_to_resistance": 5.05,
+                "sma_20": 452.02,
+                "resistance": 475.0,
+                "support": 437.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_3.6x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_4_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "BULLISH_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 459.8,
+                    "volume_ratio": 2.78,
+                    "price_change": 0.9,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 463.8,
+                    "volume_ratio": 3.57,
+                    "price_change": 0.87,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 458.0,
+                    "volume_ratio": 1.51,
+                    "price_change": -1.08,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 3.6X | Sustained Accumulation 4 Days | Institutional Buying",
+            "adjusted_score": 79,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 451.0,
+                "target_price": 475.0,
+                "stop_loss": 437.0,
+                "upside_percent": 5.32,
+                "downside_percent": 3.1,
+                "risk_reward_ratio": 1.72,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (3.6x) suggests institutional interest",
+                    "Multiple days (4) of unusual activity",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 114.75
+        },
+        {
+            "symbol": "AKPL",
+            "security_name": "Arun Kabeli Power Ltd.",
+            "combined_score": 78,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 266.8,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 20,
+                "momentum": 26
+            },
+            "key_metrics": {
+                "max_volume_ratio": 3.96,
+                "unusual_days_count": 6,
+                "distance_to_resistance": 5.05,
+                "sma_20": 254.34,
+                "resistance": 281.0,
+                "support": 242.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_4.0x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_6_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_1.1%",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-26",
+                    "price": 272.9,
+                    "volume_ratio": 3.96,
+                    "price_change": 3.37,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 269.0,
+                    "volume_ratio": 2.61,
+                    "price_change": -1.43,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 271.0,
+                    "volume_ratio": 2.01,
+                    "price_change": 1.5,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 4.0X | Sustained Accumulation 6 Days | Institutional Buying",
+            "adjusted_score": 78,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 266.8,
+                "target_price": 281.0,
+                "stop_loss": 242.0,
+                "upside_percent": 5.32,
+                "downside_percent": 9.3,
+                "risk_reward_ratio": 0.57,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (4.0x) suggests institutional interest",
+                    "Sustained accumulation for 6 days",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "BUY",
+            "action": "Good entry point - Accumulation in progress",
+            "conviction_score": 117.7
+        }
+    ],
+    "watch": [
+        {
+            "symbol": "NABIL",
+            "security_name": "Nabil Bank Limited",
+            "combined_score": 79,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 498.1,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 28,
+                "breakout_readiness": 31,
+                "momentum": 20
+            },
+            "key_metrics": {
+                "max_volume_ratio": 1.81,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 1.95,
+                "sma_20": 492.57,
+                "resistance": 508.0,
+                "support": 485.0
+            },
+            "signals": {
+                "accumulation": [
+                    "ELEVATED_VOLUME_1.8x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_0.2%",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 497.2,
+                    "volume_ratio": 1.81,
+                    "price_change": 0.83,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 497.0,
+                    "volume_ratio": 1.69,
+                    "price_change": -0.04,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 497.0,
+                    "volume_ratio": 1.73,
+                    "price_change": 1.02,
+                    "is_green": false
+                }
+            ],
+            "summary": "Elevated Volume 1.8X | Sustained Accumulation 3 Days | At Resistance Level",
+            "adjusted_score": 79,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 498.1,
+                "target_price": 508.0,
+                "stop_loss": 485.0,
+                "upside_percent": 1.99,
+                "downside_percent": 2.63,
+                "risk_reward_ratio": 0.76,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (1.8x)",
+                    "Multiple days (3) of unusual activity",
+                    "At resistance level - breakout imminent",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 110.15
+        },
+        {
+            "symbol": "MLBS",
+            "security_name": "Manushi Laghubitta Bittiya Sanstha Limited",
+            "combined_score": 77,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 1450.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 27,
+                "momentum": 15
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.57,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 3.91,
+                "sma_20": 1449.38,
+                "resistance": 1509.0,
+                "support": 1410.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.6x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-22",
+                    "price": 1450.0,
+                    "volume_ratio": 1.77,
+                    "price_change": -0.34,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 1470.0,
+                    "volume_ratio": 2.57,
+                    "price_change": 1.38,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 1450.0,
+                    "volume_ratio": 1.76,
+                    "price_change": 0.69,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 2.6X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 77,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 1450.0,
+                "target_price": 1509.0,
+                "stop_loss": 1410.0,
+                "upside_percent": 4.07,
+                "downside_percent": 2.76,
+                "risk_reward_ratio": 1.47,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.6x) suggests institutional interest",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 108.03
+        },
+        {
+            "symbol": "STC",
+            "security_name": "Salt Trading Corporation",
+            "combined_score": 77,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 5640.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 35,
+                "momentum": 10
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.36,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 1.91,
+                "sma_20": 5578.05,
+                "resistance": 5750.0,
+                "support": 5425.0
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.4x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_0.5%"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-22",
+                    "price": 5580.0,
+                    "volume_ratio": 1.54,
+                    "price_change": -0.68,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 5610.0,
+                    "volume_ratio": 1.56,
+                    "price_change": 0.54,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-28",
+                    "price": 5673.0,
+                    "volume_ratio": 2.36,
+                    "price_change": 2.09,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.4X | Sustained Accumulation 3 Days | At Resistance Level",
+            "adjusted_score": 77,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 5640.0,
+                "target_price": 5750.0,
+                "stop_loss": 5425.0,
+                "upside_percent": 1.95,
+                "downside_percent": 3.81,
+                "risk_reward_ratio": 0.51,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.4x)",
+                    "Multiple days (3) of unusual activity",
+                    "At resistance level - breakout imminent",
+                    "Strong accumulation pattern detected"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 110.97999999999999
+        },
+        {
+            "symbol": "ULHC",
+            "security_name": "Upper Lohore Khola Hydropower Company Limited",
+            "combined_score": 77,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 485.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 31,
+                "breakout_readiness": 20,
+                "momentum": 26
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.92,
+                "unusual_days_count": 2,
+                "distance_to_resistance": 6.19,
+                "sma_20": 467.58,
+                "resistance": 517.0,
+                "support": 444.5
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.9x",
+                    "VERY_STABLE_PRICE",
+                    "ACCUMULATION_2_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_2.8%",
+                    "BULLISH_CANDLES",
+                    "INCREASING_TRADE_SIZE"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 450.0,
+                    "volume_ratio": 1.77,
+                    "price_change": -0.24,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 485.2,
+                    "volume_ratio": 2.92,
+                    "price_change": 1.93,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 2.9X | Accumulation 2 Days | Bullish Pattern",
+            "adjusted_score": 77,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 485.0,
+                "target_price": 517.0,
+                "stop_loss": 444.5,
+                "upside_percent": 6.6,
+                "downside_percent": 8.35,
+                "risk_reward_ratio": 0.79,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.9x) suggests institutional interest",
+                    "Strong accumulation pattern detected",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 103.22
+        },
+        {
+            "symbol": "EBL",
+            "security_name": "Everest Bank Limited",
+            "combined_score": 76,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 668.5,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 28,
+                "breakout_readiness": 31,
+                "momentum": 17
+            },
+            "key_metrics": {
+                "max_volume_ratio": 1.67,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 2.19,
+                "sma_20": 664.95,
+                "resistance": 683.5,
+                "support": 645.0
+            },
+            "signals": {
+                "accumulation": [
+                    "ELEVATED_VOLUME_1.7x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES",
+                    "INCREASING_TRADE_SIZE"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 674.0,
+                    "volume_ratio": 1.64,
+                    "price_change": 0.45,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 677.3,
+                    "volume_ratio": 1.67,
+                    "price_change": 0.49,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-28",
+                    "price": 674.0,
+                    "volume_ratio": 1.61,
+                    "price_change": 0.55,
+                    "is_green": false
+                }
+            ],
+            "summary": "Elevated Volume 1.7X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 76,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 668.5,
+                "target_price": 683.5,
+                "stop_loss": 645.0,
+                "upside_percent": 2.24,
+                "downside_percent": 3.52,
+                "risk_reward_ratio": 0.64,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (1.7x)",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 105.97
+        },
+        {
+            "symbol": "MKJC",
+            "security_name": "Mailung Khola Jal Vidhyut Company Limited",
+            "combined_score": 76,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 537.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 28,
+                "momentum": 16
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.09,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 3.59,
+                "sma_20": 524.0,
+                "resistance": 557.0,
+                "support": 500.0
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.1x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_3.3%",
+                    "NEUTRAL_CANDLES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-21",
+                    "price": 527.3,
+                    "volume_ratio": 1.6,
+                    "price_change": -0.28,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 520.0,
+                    "volume_ratio": 2.09,
+                    "price_change": 0.89,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 534.0,
+                    "volume_ratio": 2.0,
+                    "price_change": -1.84,
+                    "is_green": false
+                }
+            ],
+            "summary": "High Volume 2.1X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 76,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 537.0,
+                "target_price": 557.0,
+                "stop_loss": 500.0,
+                "upside_percent": 3.72,
+                "downside_percent": 6.89,
+                "risk_reward_ratio": 0.54,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.1x)",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 105.27000000000001
+        },
+        {
+            "symbol": "TPC",
+            "security_name": "Terhathum Power Company Limited",
+            "combined_score": 76,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 381.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 28,
+                "momentum": 16
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.64,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 4.68,
+                "sma_20": 372.03,
+                "resistance": 399.7,
+                "support": 360.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.6x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_0.5%",
+                    "NEUTRAL_CANDLES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 375.0,
+                    "volume_ratio": 1.88,
+                    "price_change": 1.35,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 379.0,
+                    "volume_ratio": 2.64,
+                    "price_change": 3.33,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 379.0,
+                    "volume_ratio": 2.23,
+                    "price_change": 2.71,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 2.6X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 76,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 381.0,
+                "target_price": 399.7,
+                "stop_loss": 360.0,
+                "upside_percent": 4.91,
+                "downside_percent": 5.51,
+                "risk_reward_ratio": 0.89,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.6x) suggests institutional interest",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 105.84
+        },
+        {
+            "symbol": "CBBL",
+            "security_name": "Chhimek Laghubitta Bittiya Sanstha Limited",
+            "combined_score": 74,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 940.5,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 31,
+                "breakout_readiness": 27,
+                "momentum": 16
+            },
+            "key_metrics": {
+                "max_volume_ratio": 3.74,
+                "unusual_days_count": 2,
+                "distance_to_resistance": 3.72,
+                "sma_20": 933.17,
+                "resistance": 976.8,
+                "support": 900.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_3.7x",
+                    "VERY_STABLE_PRICE",
+                    "ACCUMULATION_2_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-21",
+                    "price": 945.0,
+                    "volume_ratio": 1.56,
+                    "price_change": 0.32,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 960.0,
+                    "volume_ratio": 3.74,
+                    "price_change": -1.03,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 3.7X | Accumulation 2 Days | Near Resistance",
+            "adjusted_score": 74,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 940.5,
+                "target_price": 976.8,
+                "stop_loss": 900.0,
+                "upside_percent": 3.86,
+                "downside_percent": 4.31,
+                "risk_reward_ratio": 0.9,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (3.7x) suggests institutional interest",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 109.26
+        },
+        {
+            "symbol": "NHPC",
+            "security_name": "National Hydro Power Company Limited",
+            "combined_score": 74,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 215.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 29,
+                "breakout_readiness": 24,
+                "momentum": 21
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.59,
+                "unusual_days_count": 4,
+                "distance_to_resistance": 4.66,
+                "sma_20": 198.81,
+                "resistance": 225.5,
+                "support": 182.3
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.6x",
+                    "MODERATE_PRICE_MOVE",
+                    "SUSTAINED_ACCUMULATION_4_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 220.9,
+                    "volume_ratio": 2.24,
+                    "price_change": 3.18,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 214.0,
+                    "volume_ratio": 1.7,
+                    "price_change": -3.12,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 207.0,
+                    "volume_ratio": 1.61,
+                    "price_change": -3.27,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 2.6X | Sustained Accumulation 4 Days | Near Resistance",
+            "adjusted_score": 74,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 215.0,
+                "target_price": 225.5,
+                "stop_loss": 182.3,
+                "upside_percent": 4.88,
+                "downside_percent": 15.21,
+                "risk_reward_ratio": 0.32,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.6x) suggests institutional interest",
+                    "Multiple days (4) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 105.63
+        },
+        {
+            "symbol": "PMHPL",
+            "security_name": "Panchakanya Mai Hydropower Ltd",
+            "combined_score": 74,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 340.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 29,
+                "breakout_readiness": 28,
+                "momentum": 17
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.44,
+                "unusual_days_count": 4,
+                "distance_to_resistance": 2.86,
+                "sma_20": 324.8,
+                "resistance": 350.0,
+                "support": 305.4
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.4x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_4_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES",
+                    "INCREASING_TRADE_SIZE"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-25",
+                    "price": 342.0,
+                    "volume_ratio": 1.71,
+                    "price_change": 2.7,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 335.9,
+                    "volume_ratio": 1.65,
+                    "price_change": -1.78,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 345.0,
+                    "volume_ratio": 2.44,
+                    "price_change": 2.92,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.4X | Sustained Accumulation 4 Days | Near Resistance",
+            "adjusted_score": 74,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 340.0,
+                "target_price": 350.0,
+                "stop_loss": 305.4,
+                "upside_percent": 2.94,
+                "downside_percent": 10.18,
+                "risk_reward_ratio": 0.29,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.4x)",
+                    "Multiple days (4) of unusual activity",
+                    "Near resistance - watch for breakout"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 108.48
+        },
+        {
+            "symbol": "SPDL",
+            "security_name": "Synergy Power Development Ltd.",
+            "combined_score": 74,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 414.9,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 20,
+                "momentum": 22
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.15,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 5.49,
+                "sma_20": 395.63,
+                "resistance": 439.0,
+                "support": 376.4
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.2x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_4.0%",
+                    "NEUTRAL_CANDLES",
+                    "INCREASING_TRADE_SIZE"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-22",
+                    "price": 391.0,
+                    "volume_ratio": 1.89,
+                    "price_change": -0.26,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 399.0,
+                    "volume_ratio": 1.79,
+                    "price_change": 2.05,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 420.0,
+                    "volume_ratio": 2.15,
+                    "price_change": -0.71,
+                    "is_green": false
+                }
+            ],
+            "summary": "High Volume 2.2X | Sustained Accumulation 3 Days",
+            "adjusted_score": 74,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 414.9,
+                "target_price": 439.0,
+                "stop_loss": 376.4,
+                "upside_percent": 5.81,
+                "downside_percent": 9.28,
+                "risk_reward_ratio": 0.63,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.1x)",
+                    "Multiple days (3) of unusual activity",
+                    "Strong accumulation pattern detected"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 99.77
+        },
+        {
+            "symbol": "UPPER",
+            "security_name": "Upper Tamakoshi Hydropower Ltd",
+            "combined_score": 74,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 189.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 29,
+                "breakout_readiness": 24,
+                "momentum": 21
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.46,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 4.55,
+                "sma_20": 180.09,
+                "resistance": 198.0,
+                "support": 170.5
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.5x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-22",
+                    "price": 185.1,
+                    "volume_ratio": 1.92,
+                    "price_change": 2.72,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 193.0,
+                    "volume_ratio": 1.75,
+                    "price_change": -0.72,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 191.5,
+                    "volume_ratio": 2.46,
+                    "price_change": 3.68,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.5X | Sustained Accumulation 5 Days | Near Resistance",
+            "adjusted_score": 74,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 189.0,
+                "target_price": 198.0,
+                "stop_loss": 170.5,
+                "upside_percent": 4.76,
+                "downside_percent": 9.79,
+                "risk_reward_ratio": 0.49,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.5x)",
+                    "Sustained accumulation for 5 days",
+                    "Near resistance - watch for breakout",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 107.2
+        },
+        {
+            "symbol": "VLUCL",
+            "security_name": "Vision Lumbini Urja Company Limited ",
+            "combined_score": 74,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 582.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 16,
+                "momentum": 26
+            },
+            "key_metrics": {
+                "max_volume_ratio": 4.22,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 10.74,
+                "sma_20": 574.81,
+                "resistance": 652.0,
+                "support": 547.9
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_4.2x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_0.3%",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-21",
+                    "price": 563.0,
+                    "volume_ratio": 4.22,
+                    "price_change": -0.53,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 598.8,
+                    "volume_ratio": 2.25,
+                    "price_change": 3.24,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 620.9,
+                    "volume_ratio": 3.79,
+                    "price_change": 3.69,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 4.2X | Sustained Accumulation 5 Days | Institutional Buying",
+            "adjusted_score": 74,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 582.0,
+                "target_price": 652.0,
+                "stop_loss": 547.9,
+                "upside_percent": 12.03,
+                "downside_percent": 5.86,
+                "risk_reward_ratio": 2.05,
+                "position_size": "normal",
+                "reasons": [
+                    "Extreme volume spike (4.2x) indicates strong accumulation",
+                    "Sustained accumulation for 5 days",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 105.1
+        },
+        {
+            "symbol": "BBC",
+            "security_name": "Bishal Bazar Company Limited",
+            "combined_score": 73,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 4879.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 28,
+                "breakout_readiness": 35,
+                "momentum": 10
+            },
+            "key_metrics": {
+                "max_volume_ratio": 1.91,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 1.77,
+                "sma_20": 4862.28,
+                "resistance": 4966.7,
+                "support": 4755.0
+            },
+            "signals": {
+                "accumulation": [
+                    "ELEVATED_VOLUME_1.9x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "AT_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_0.0%"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 4934.0,
+                    "volume_ratio": 1.54,
+                    "price_change": 0.41,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-22",
+                    "price": 4801.0,
+                    "volume_ratio": 1.91,
+                    "price_change": -1.21,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-02-01",
+                    "price": 4879.0,
+                    "volume_ratio": 1.87,
+                    "price_change": 0.62,
+                    "is_green": true
+                }
+            ],
+            "summary": "Elevated Volume 1.9X | Sustained Accumulation 3 Days | At Resistance Level",
+            "adjusted_score": 73,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 4879.0,
+                "target_price": 4966.7,
+                "stop_loss": 4755.0,
+                "upside_percent": 1.8,
+                "downside_percent": 2.54,
+                "risk_reward_ratio": 0.71,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (1.9x)",
+                    "Multiple days (3) of unusual activity",
+                    "At resistance level - breakout imminent"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 105.00999999999999
+        },
+        {
+            "symbol": "GBIME",
+            "security_name": "Global IME Bank Limited",
+            "combined_score": 73,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 227.9,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 27,
+                "momentum": 11
+            },
+            "key_metrics": {
+                "max_volume_ratio": 3.45,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 4.24,
+                "sma_20": 228.51,
+                "resistance": 238.0,
+                "support": 224.9
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_3.5x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "INCREASING_TRADE_SIZE"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 230.0,
+                    "volume_ratio": 3.45,
+                    "price_change": 0.79,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-21",
+                    "price": 228.9,
+                    "volume_ratio": 1.62,
+                    "price_change": -0.48,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 233.0,
+                    "volume_ratio": 1.76,
+                    "price_change": 2.19,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 3.5X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 73,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 227.9,
+                "target_price": 238.0,
+                "stop_loss": 224.9,
+                "upside_percent": 4.43,
+                "downside_percent": 1.32,
+                "risk_reward_ratio": 3.36,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (3.5x) suggests institutional interest",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 107.77
+        },
+        {
+            "symbol": "HHL",
+            "security_name": "Himalayan Hydropower Limited",
+            "combined_score": 73,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 338.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 25,
+                "breakout_readiness": 31,
+                "momentum": 17
+            },
+            "key_metrics": {
+                "max_volume_ratio": 1.93,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 4.79,
+                "sma_20": 332.44,
+                "resistance": 355.0,
+                "support": 318.5
+            },
+            "signals": {
+                "accumulation": [
+                    "ELEVATED_VOLUME_1.9x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES",
+                    "INCREASING_TRADE_SIZE"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-26",
+                    "price": 349.8,
+                    "volume_ratio": 1.93,
+                    "price_change": 1.63,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 340.0,
+                    "volume_ratio": 1.77,
+                    "price_change": -2.8,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-29",
+                    "price": 346.0,
+                    "volume_ratio": 1.62,
+                    "price_change": 0.58,
+                    "is_green": true
+                }
+            ],
+            "summary": "Elevated Volume 1.9X | Sustained Accumulation 5 Days | Near Resistance",
+            "adjusted_score": 73,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 338.0,
+                "target_price": 355.0,
+                "stop_loss": 318.5,
+                "upside_percent": 5.03,
+                "downside_percent": 5.77,
+                "risk_reward_ratio": 0.87,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (1.9x)",
+                    "Sustained accumulation for 5 days",
+                    "Near resistance - watch for breakout"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 103.07000000000001
+        },
+        {
+            "symbol": "CKHL",
+            "security_name": "Chirkhwa Hydropower Limited ",
+            "combined_score": 72,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 724.8,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 20,
+                "momentum": 20
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.53,
+                "unusual_days_count": 4,
+                "distance_to_resistance": 8.48,
+                "sma_20": 683.79,
+                "resistance": 792.0,
+                "support": 637.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.5x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_4_DAYS"
+                ],
+                "breakout": [
+                    "APPROACHING_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE"
+                ],
+                "momentum": [
+                    "POSITIVE_MOMENTUM_1.2%",
+                    "BULLISH_CANDLES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 677.0,
+                    "volume_ratio": 1.67,
+                    "price_change": 1.04,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-26",
+                    "price": 732.5,
+                    "volume_ratio": 1.61,
+                    "price_change": 2.25,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 726.5,
+                    "volume_ratio": 2.22,
+                    "price_change": -0.82,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 2.5X | Sustained Accumulation 4 Days | Bullish Pattern",
+            "adjusted_score": 72,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 724.8,
+                "target_price": 792.0,
+                "stop_loss": 637.0,
+                "upside_percent": 9.27,
+                "downside_percent": 12.11,
+                "risk_reward_ratio": 0.77,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.5x) suggests institutional interest",
+                    "Multiple days (4) of unusual activity",
+                    "Strong accumulation pattern detected",
+                    "Bullish candle pattern"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 95.69
+        },
+        {
+            "symbol": "ILI",
+            "security_name": "IME Life Insurance Company Limited",
+            "combined_score": 72,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 445.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 28,
+                "breakout_readiness": 23,
+                "momentum": 21
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.01,
+                "unusual_days_count": 2,
+                "distance_to_resistance": 4.22,
+                "sma_20": 446.5,
+                "resistance": 464.6,
+                "support": 435.2
+            },
+            "signals": {
+                "accumulation": [
+                    "HIGH_VOLUME_2.0x",
+                    "VERY_STABLE_PRICE",
+                    "ACCUMULATION_2_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "STEADY",
+                    "NEUTRAL_CANDLES",
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-18",
+                    "price": 451.5,
+                    "volume_ratio": 1.72,
+                    "price_change": 1.44,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-20",
+                    "price": 457.2,
+                    "volume_ratio": 2.01,
+                    "price_change": 1.26,
+                    "is_green": true
+                }
+            ],
+            "summary": "High Volume 2.0X | Accumulation 2 Days | Near Resistance",
+            "adjusted_score": 72,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 445.0,
+                "target_price": 464.6,
+                "stop_loss": 435.2,
+                "upside_percent": 4.4,
+                "downside_percent": 2.2,
+                "risk_reward_ratio": 2.0,
+                "position_size": "normal",
+                "reasons": [
+                    "Above average volume (2.0x)",
+                    "Near resistance - watch for breakout",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 97.61
+        },
+        {
+            "symbol": "MEN",
+            "security_name": "Mountain Energy Nepal Limited",
+            "combined_score": 72,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 586.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 35,
+                "breakout_readiness": 27,
+                "momentum": 10
+            },
+            "key_metrics": {
+                "max_volume_ratio": 2.69,
+                "unusual_days_count": 5,
+                "distance_to_resistance": 4.53,
+                "sma_20": 582.9,
+                "resistance": 613.8,
+                "support": 555.0
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_2.7x",
+                    "VERY_STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_5_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "VOLUME_SURGE",
+                    "TIGHT_RANGE"
+                ],
+                "momentum": [
+                    "LARGE_BLOCK_TRADES"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-22",
+                    "price": 605.0,
+                    "volume_ratio": 1.5,
+                    "price_change": 0.62,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 612.0,
+                    "volume_ratio": 1.83,
+                    "price_change": 1.16,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-01-27",
+                    "price": 595.0,
+                    "volume_ratio": 1.52,
+                    "price_change": -0.75,
+                    "is_green": false
+                }
+            ],
+            "summary": "Extreme Volume 2.7X | Sustained Accumulation 5 Days | Near Resistance",
+            "adjusted_score": 72,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 586.0,
+                "target_price": 613.8,
+                "stop_loss": 555.0,
+                "upside_percent": 4.74,
+                "downside_percent": 5.29,
+                "risk_reward_ratio": 0.9,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (2.7x) suggests institutional interest",
+                    "Sustained accumulation for 5 days",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected",
+                    "Large block trades indicate institutional buying"
+                ],
+                "warnings": [
+                    "Recent activity shows more selling pressure"
+                ],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 106.39
+        },
+        {
+            "symbol": "PFL",
+            "security_name": "Pokhara Finance Ltd.",
+            "combined_score": 72,
+            "alert_level": "STRONG_BUY_SIGNAL",
+            "current_price": 385.0,
+            "date": "2026-02-01",
+            "score_breakdown": {
+                "accumulation": 32,
+                "breakout_readiness": 28,
+                "momentum": 12
+            },
+            "key_metrics": {
+                "max_volume_ratio": 3.15,
+                "unusual_days_count": 3,
+                "distance_to_resistance": 4.94,
+                "sma_20": 371.97,
+                "resistance": 405.0,
+                "support": 352.8
+            },
+            "signals": {
+                "accumulation": [
+                    "EXTREME_VOLUME_3.2x",
+                    "STABLE_PRICE",
+                    "SUSTAINED_ACCUMULATION_3_DAYS"
+                ],
+                "breakout": [
+                    "NEAR_RESISTANCE",
+                    "ABOVE_SMA20",
+                    "ABOVE_SMA50",
+                    "VOLUME_SURGE",
+                    "CONSOLIDATING"
+                ],
+                "momentum": [
+                    "NEUTRAL_CANDLES",
+                    "INCREASING_TRADE_SIZE"
+                ]
+            },
+            "recent_unusual_activity": [
+                {
+                    "date": "2026-01-20",
+                    "price": 384.0,
+                    "volume_ratio": 1.83,
+                    "price_change": 1.32,
+                    "is_green": false
+                },
+                {
+                    "date": "2026-01-25",
+                    "price": 400.0,
+                    "volume_ratio": 3.15,
+                    "price_change": 3.63,
+                    "is_green": true
+                },
+                {
+                    "date": "2026-02-01",
+                    "price": 385.0,
+                    "volume_ratio": 2.08,
+                    "price_change": 2.53,
+                    "is_green": true
+                }
+            ],
+            "summary": "Extreme Volume 3.2X | Sustained Accumulation 3 Days | Near Resistance",
+            "adjusted_score": 72,
+            "market_adjustment": 0,
+            "recommendation": {
+                "entry_price": 385.0,
+                "target_price": 405.0,
+                "stop_loss": 352.8,
+                "upside_percent": 5.19,
+                "downside_percent": 8.36,
+                "risk_reward_ratio": 0.62,
+                "position_size": "normal",
+                "reasons": [
+                    "High volume (3.1x) suggests institutional interest",
+                    "Multiple days (3) of unusual activity",
+                    "Near resistance - watch for breakout",
+                    "Strong accumulation pattern detected"
+                ],
+                "warnings": [],
+                "market_considerations": [
+                    "Market neutral - focus on stock-specific signals"
+                ]
+            },
+            "market_context": {
+                "trend": "neutral",
+                "sentiment": "neutral",
+                "recommendation_adjusted": false
+            },
+            "category": "WATCH",
+            "action": "Monitor for stronger signals",
+            "conviction_score": 103.87
+        }
+    ],
+    "hold": [],
+    "sell": [],
+    "metrics_explanation": {
+        "market_analysis": {
+            "description": "NEPSE Index trend analysis to determine market conditions",
+            "trends": {
+                "strong_uptrend": "Market rallying strongly - Aggressive buying recommended",
+                "uptrend": "Market moving up - Standard buying conditions",
+                "neutral": "Market range-bound - Be selective",
+                "downtrend": "Market falling - Reduce exposure",
+                "strong_downtrend": "Market in correction - Protect capital"
+            },
+            "factors": {
+                "period_return": "Overall return during analysis period (30%)",
+                "short_term_momentum": "Last 5 days performance (25%)",
+                "positive_negative_ratio": "Ratio of up days to down days (20%)",
+                "52_week_position": "Position relative to yearly high/low (25%)"
+            }
+        },
+        "combined_score": {
+            "description": "Overall signal strength (0-100), adjusted for market conditions",
+            "ranges": {
+                "85-100": "STRONG_BUY - Highest conviction",
+                "70-84": "BUY - Strong accumulation detected",
+                "55-69": "WATCH - Developing pattern",
+                "40-54": "MONITOR - Weak signals"
+            },
+            "market_adjustments": {
+                "strong_uptrend": "+10 points (more aggressive)",
+                "uptrend": "+5 points",
+                "neutral": "No adjustment",
+                "downtrend": "-5 points (more conservative)",
+                "strong_downtrend": "-10 points (very conservative)"
+            }
+        },
+        "score_breakdown": {
+            "accumulation": "Volume spikes + Price stability + Duration (max 35)",
+            "breakout_readiness": "Near resistance + Above SMAs + Consolidation (max 35)",
+            "momentum": "Price trend + Candle patterns + Block trades (max 30)"
+        },
+        "key_metrics": {
+            "max_volume_ratio": "Volume vs 10-day average. >= 2.5x indicates accumulation",
+            "unusual_days_count": "Days with volume spike + stable price. >= 3 is sustained",
+            "distance_to_resistance": "Distance to 20-day high. <= 5% means ready to break",
+            "sma_20": "20-day moving average. Price > SMA = bullish",
+            "resistance": "20-day high - Use as target price",
+            "support": "20-day low - Use as stop loss"
+        },
+        "recommendation_categories": {
+            "STRONG_BUY": "High conviction buy - Market favorable, strong signals",
+            "BUY": "Good entry point - Positive signals detected",
+            "WATCH": "Monitor for better entry or stronger signals",
+            "HOLD": "Maintain existing positions, avoid new entries (bearish market)",
+            "SELL": "Consider exiting - High volume could be distribution (strong bearish market)"
+        },
+        "position_sizing": {
+            "larger": "Strong uptrend market - Can take bigger positions",
+            "normal": "Standard position size",
+            "smaller": "Downtrend market - Reduce position size",
+            "minimal": "Strong downtrend - Minimal exposure only"
+        }
+    }
+}
