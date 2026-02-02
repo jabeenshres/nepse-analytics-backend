@@ -1,5 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 import time
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -13,22 +16,76 @@ class NepalStockScraper:
     PAGE_LOAD_WAIT_TIME = 2
     DATE_CHANGE_WAIT_TIME = 3
 
-    def __init__(self):
+    def __init__(self, headless=True):
         self.temp_dir = tempfile.mkdtemp()
         chrome_options = webdriver.ChromeOptions()
-        download_preferences = {"download.default_directory": self.temp_dir}
+        
+        # Common options
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        
+        # Headless mode configuration
+        if headless:
+            chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--disable-gpu")
+        
+        # Disable automation flags
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option("useAutomationExtension", False)
+        
+        download_preferences = {
+            "download.default_directory": self.temp_dir,
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "safebrowsing.enabled": True
+        }
         chrome_options.add_experimental_option("prefs", download_preferences)
         self.driver = webdriver.Chrome(options=chrome_options)
+        
+        # Remove webdriver property to avoid detection
+        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
+        # Enable downloads in headless mode
+        if headless:
+            self.driver.execute_cdp_cmd(
+                "Page.setDownloadBehavior",
+                {"behavior": "allow", "downloadPath": self.temp_dir}
+            )
+        
+        print(f"Chrome WebDriver initialized {'in headless mode' if headless else 'with GUI'}")
 
     def load_page(self, url):
         try:
             self.driver.get(url)
-            time.sleep(self.PAGE_LOAD_WAIT_TIME)
-            assert "Nepal Stock Exchange" in self.driver.title
-        except AssertionError:
-            raise Exception("The page title does not contain 'Nepal Stock Exchange'.")
+            print(f"Loading page: {url}")
+            
+            # Wait for Angular to bootstrap (up to 30 seconds)
+            print("Waiting for page to load...")
+            time.sleep(10)  # Initial wait for Angular bootstrap
+            
+            # Wait for the date picker element to be present
+            try:
+                wait = WebDriverWait(self.driver, 20)
+                date_input = wait.until(
+                    EC.presence_of_element_located((By.XPATH, "//input[@bsdatepicker='']"))
+                )
+                print(f"Date picker found. Page loaded successfully.")
+            except TimeoutException:
+                # Try alternative selector
+                try:
+                    date_input = wait.until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, "input[bsdatepicker]"))
+                    )
+                    print(f"Date picker found (alt selector). Page loaded successfully.")
+                except TimeoutException:
+                    print(f"Warning: Could not find date picker element. Page may not have loaded correctly.")
+                    print(f"Page title: {self.driver.title}")
+            
         except Exception as e:
-            raise Exception(f"An error occurred: {e}")
+            raise Exception(f"An error occurred while loading page: {e}")
 
     def change_date(self, date):
         try:

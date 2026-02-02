@@ -226,6 +226,9 @@ class StockScreenerView(APIView):
         except (ValueError, TypeError):
             max_price = float('inf')
         
+        # Get stock_type filter (default: regular stocks only)
+        stock_type = request.query_params.get('stock_type', 'stock')
+        
         # Get latest date
         latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
         if not latest_date:
@@ -234,8 +237,10 @@ class StockScreenerView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Get all stocks with recent data
+        # Get all stocks with recent data, filtered by stock_type
         stocks = Stock.objects.all()
+        if stock_type.lower() != 'all':
+            stocks = stocks.filter(stock_type=stock_type)
         
         results = []
         for stock in stocks:

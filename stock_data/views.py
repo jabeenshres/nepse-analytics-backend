@@ -31,6 +31,11 @@ from .constants import (
 )
 from accounts.permissions import IsAdminOrManager
 
+# Stock type constants
+STOCK_TYPE_PARAM = 'stock_type'
+DEFAULT_STOCK_TYPE = 'stock'  # Default to regular stocks only
+ALL_STOCK_TYPES = 'all'  # Use this value to show all types
+
 logger = logging.getLogger(__name__)
 
 
@@ -78,6 +83,9 @@ class StockViewSet(viewsets.ModelViewSet):
     - symbol__icontains: Symbol contains (case-insensitive)
     - security_name__icontains: Security name contains
     - security_id: Exact security ID
+    - stock_type: Filter by stock type (stock, mutual_fund, debenture, promoter_share, preferred_stock)
+                  Default: 'stock' (regular stocks only)
+                  Use 'all' to show all types
     - has_lstm_metrics: true/false
     - has_rf_metrics: true/false
     - ordering: Order by symbol, security_name, security_id
@@ -85,7 +93,9 @@ class StockViewSet(viewsets.ModelViewSet):
     - include_data: true/false - Include nested stock data (default: true)
     - data_limit: int - Number of nested entries to include (default: 5, max: 50)
     
-    Example: /api/stock-data/?symbol__icontains=NBL&has_lstm_metrics=true&include_data=false
+    Example: /api/stock-data/?symbol__icontains=NBL&stock_type=stock&include_data=false
+             /api/stock-data/?stock_type=mutual_fund (show only mutual funds)
+             /api/stock-data/?stock_type=all (show all security types)
     """
     queryset = Stock.objects.prefetch_related('data').all()
     serializer_class = StockSerializer
@@ -94,8 +104,23 @@ class StockViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StockFilter
     search_fields = ['symbol', 'security_name']
-    ordering_fields = ['symbol', 'security_name', 'security_id']
+    ordering_fields = ['symbol', 'security_name', 'security_id', 'stock_type']
     ordering = ['symbol']  # Default ordering
+
+    def get_queryset(self):
+        """
+        Filter queryset by stock_type.
+        Default: Only regular stocks (stock_type='stock')
+        Use stock_type=all to get all types
+        """
+        queryset = super().get_queryset()
+        stock_type = self.request.query_params.get(STOCK_TYPE_PARAM, DEFAULT_STOCK_TYPE)
+        
+        if stock_type.lower() != ALL_STOCK_TYPES:
+            # Filter by specific stock type (default is 'stock')
+            queryset = queryset.filter(stock_type=stock_type)
+        
+        return queryset
 
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
@@ -317,6 +342,9 @@ class LatestStockDataViewSet(viewsets.ViewSet):
             search: Search by symbol or security name
             gainer: Filter by gainers (true/false)
             date: Specific date (YYYY-MM-DD format)
+            stock_type: Filter by stock type (stock, mutual_fund, debenture, etc.)
+                        Default: 'stock' (regular stocks only)
+                        Use 'all' to show all types
             page: Page number
             page_size: Items per page
         
@@ -326,6 +354,7 @@ class LatestStockDataViewSet(viewsets.ViewSet):
         search_query = request.query_params.get(SEARCH_PARAM)
         is_gainer = request.query_params.get(GAINER_PARAM)
         target_date_str = request.query_params.get(DATE_PARAM)
+        stock_type = request.query_params.get(STOCK_TYPE_PARAM, DEFAULT_STOCK_TYPE)
 
         target_date = self._get_target_date(target_date_str)
         if not target_date:
@@ -337,10 +366,29 @@ class LatestStockDataViewSet(viewsets.ViewSet):
         queryset = StockData.objects.filter(
             date=target_date
         ).select_related('stock')
+        
+        # Apply stock_type filter (default: only regular stocks)
+        if stock_type.lower() != ALL_STOCK_TYPES:
+            queryset = queryset.filter(stock__stock_type=stock_type)
+        
         queryset = self._apply_filters(queryset, search_query, is_gainer)
 
         stock_data_by_symbol = self._build_stock_data_dict(queryset)
         response_data = list(stock_data_by_symbol.values())
+        
+        # Sort by percentage change if filtering by gainers/losers
+        if is_gainer in GAINER_TRUE_VALUES:
+            # Sort gainers by percentage change descending (highest gain first)
+            response_data.sort(
+                key=lambda x: x.get('percentage_change', 0) or 0,
+                reverse=True
+            )
+        elif is_gainer in GAINER_FALSE_VALUES:
+            # Sort losers by percentage change ascending (biggest loss first, most negative)
+            response_data.sort(
+                key=lambda x: x.get('percentage_change', 0) or 0,
+                reverse=False
+            )
 
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(response_data, request)
@@ -405,16 +453,32 @@ class LatestStockDataViewSet(viewsets.ViewSet):
         stock_data_by_symbol = {}
         for stock_data_entry in queryset:
             stock = stock_data_entry.stock
+            
+            # Calculate percentage change
+            # Formula: (today's close - previous day's close) / previous day's close * 100
+            percentage_change = None
+            if stock_data_entry.previous_day_close_price and stock_data_entry.previous_day_close_price > 0:
+                percentage_change = float(
+                    (stock_data_entry.close_price - stock_data_entry.previous_day_close_price) 
+                    / stock_data_entry.previous_day_close_price * 100
+                )
             if stock not in stock_data_by_symbol:
                 stock_data_by_symbol[stock] = {
                     'id': stock.id,
                     'symbol': stock.symbol,
                     'security_id': stock.security_id,
                     'security_name': stock.security_name,
+                    'stock_type': stock.stock_type,
                     'fifty_two_weeks_high': stock.fifty_two_weeks_high,
                     'fifty_two_weeks_low': stock.fifty_two_weeks_low,
+                    'percentage_change': percentage_change,
                     'data': []
                 }
+            else:
+                # Update percentage_change if not set (use latest entry)
+                if stock_data_by_symbol[stock]['percentage_change'] is None:
+                    stock_data_by_symbol[stock]['percentage_change'] = percentage_change
+                    
             stock_data_by_symbol[stock]['data'].append({
                 'date': stock_data_entry.date,
                 'open_price': stock_data_entry.open_price,
@@ -428,5 +492,6 @@ class LatestStockDataViewSet(viewsets.ViewSet):
                 'total_trades': stock_data_entry.total_trades,
                 'average_traded_price': stock_data_entry.average_traded_price,
                 'market_capitalization': stock_data_entry.market_capitalization,
+                'percentage_change': percentage_change,
             })
         return stock_data_by_symbol

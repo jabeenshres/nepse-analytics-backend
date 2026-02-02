@@ -10,9 +10,25 @@ class Stock(models.Model):
     """
     Represents a stock/security in the Nepal Stock Exchange.
     """
+    # Stock type choices
+    STOCK_TYPE_CHOICES = [
+        ('stock', 'Stock'),
+        ('mutual_fund', 'Mutual Fund'),
+        ('debenture', 'Debenture'),
+        ('promoter_share', 'Promoter Share'),
+        ('preferred_stock', 'Preferred Stock'),
+    ]
+    
     symbol = models.CharField(max_length=100, unique=True, db_index=True)
     security_id = models.IntegerField(unique=True, db_index=True)
     security_name = models.CharField(max_length=200)
+    stock_type = models.CharField(
+        max_length=20,
+        choices=STOCK_TYPE_CHOICES,
+        default='stock',
+        db_index=True,
+        help_text="Type of security: stock, mutual_fund, debenture, etc."
+    )
     fifty_two_weeks_high = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -59,6 +75,8 @@ class Stock(models.Model):
         indexes = [
             models.Index(fields=['symbol']),
             models.Index(fields=['security_id']),
+            models.Index(fields=['stock_type']),
+            models.Index(fields=['stock_type', 'symbol']),
         ]
 
     def __str__(self):
@@ -596,3 +614,46 @@ class NepseIndex(models.Model):
     def get_all_index_ids(cls):
         """Get all available index IDs."""
         return [id_val for id_val, _ in cls.INDEX_CHOICES]
+
+
+class StockAnalyticsCache(models.Model):
+    """
+    Cache for computed stock analytics to avoid recomputation.
+    Stores the results of comprehensive stock analysis for a specific date.
+    Supports multiple analytics types: top_stocks, breakout_watchlist, accumulation_alerts
+    """
+    CACHE_TYPE_CHOICES = [
+        ('top_stocks', 'Top Stocks Analysis'),
+        ('breakout_watchlist', 'Breakout Watchlist Analysis'),
+        ('accumulation_alerts', 'Accumulation Alerts Analysis'),
+    ]
+    
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='analytics_cache')
+    analysis_date = models.DateField(db_index=True, help_text="Date for which analysis was computed")
+    cache_type = models.CharField(
+        max_length=30,
+        choices=CACHE_TYPE_CHOICES,
+        default='top_stocks',
+        db_index=True,
+        help_text="Type of analytics cached"
+    )
+    computed_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    # Cached analytics data (stored as JSON)
+    analytics_data = models.JSONField(
+        help_text="Cached comprehensive analytics results including scores, signals, recommendations"
+    )
+    
+    class Meta:
+        db_table = 'stock_data_stockanalyticscache'
+        unique_together = [['stock', 'analysis_date', 'cache_type']]
+        indexes = [
+            models.Index(fields=['analysis_date', 'computed_at']),
+            models.Index(fields=['stock', 'analysis_date', 'cache_type']),
+            models.Index(fields=['cache_type', 'analysis_date']),
+        ]
+        verbose_name = 'Stock Analytics Cache'
+        verbose_name_plural = 'Stock Analytics Cache'
+    
+    def __str__(self):
+        return f"{self.stock.symbol} - {self.analysis_date} - {self.get_cache_type_display()} (Computed: {self.computed_at})"

@@ -19,11 +19,53 @@ from rest_framework.permissions import AllowAny
 from django.db.models import Avg, Max, Min, F, Q
 from django.db.models.functions import TruncDate
 
-from .models import Stock, StockData, NepseIndex
+from .models import Stock, StockData, NepseIndex, StockAnalyticsCache
 
 logger = logging.getLogger(__name__)
 
 DATE_FORMAT = '%Y-%m-%d'
+
+
+def save_analytics_cache_safe(stock, analysis_date, cache_type, result, max_retries=3):
+    """
+    Save analytics result to cache with retry logic to handle SQLite database locking.
+    
+    This is a helper function that can be used by all analytics views to safely
+    write to the cache without blocking requests if the database is locked.
+    
+    Args:
+        stock: Stock instance
+        analysis_date: Date for analysis
+        cache_type: Type of cache ('top_stocks', 'breakout_watchlist', 'accumulation_alerts')
+        result: Analytics result to cache
+        max_retries: Maximum number of retry attempts (default: 3)
+    """
+    import time
+    from django.db import transaction
+    
+    for attempt in range(max_retries):
+        try:
+            with transaction.atomic():
+                StockAnalyticsCache.objects.update_or_create(
+                    stock=stock,
+                    analysis_date=analysis_date,
+                    cache_type=cache_type,
+                    defaults={'analytics_data': result}
+                )
+            return  # Success, exit retry loop
+        except Exception as e:
+            if attempt < max_retries - 1:
+                # Wait before retrying (exponential backoff)
+                wait_time = (2 ** attempt) * 0.1  # 0.1s, 0.2s, 0.4s
+                time.sleep(wait_time)
+                continue
+            else:
+                # Last attempt failed, log but don't raise (non-blocking cache)
+                logger.warning(
+                    f"Failed to cache analytics for {stock.symbol} "
+                    f"({cache_type}, {analysis_date}) after {max_retries} attempts: {e}"
+                )
+                return  # Don't block the request if caching fails
 
 
 class UnusualActivityDetectorView(APIView):
@@ -65,6 +107,9 @@ class UnusualActivityDetectorView(APIView):
             price_threshold = 4.0
             min_volume = 10000
         
+        # Get stock_type filter (default: regular stocks only)
+        stock_type = request.query_params.get('stock_type', 'stock')
+        
         # Get latest date in the system
         latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
         if not latest_date:
@@ -76,7 +121,10 @@ class UnusualActivityDetectorView(APIView):
         start_date = latest_date - timedelta(days=days_lookback)
         
         unusual_stocks = []
+        # Filter by stock_type (default: regular stocks only)
         stocks = Stock.objects.all()
+        if stock_type.lower() != 'all':
+            stocks = stocks.filter(stock_type=stock_type)
         
         for stock in stocks:
             result = self._analyze_stock(
@@ -405,10 +453,33 @@ class AccumulationAlertView(APIView):
         symbol = request.query_params.get('symbol')
         alert_level = request.query_params.get('alert_level', 'high')
         
+        date_param = request.query_params.get('date', '').strip()
+        
+        # Determine analysis date
+        if date_param:
+            try:
+                from datetime import datetime
+                analysis_date = datetime.strptime(date_param, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': 'Invalid date format. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            # Use latest available date
+            latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
+            if not latest_date:
+                return Response({'error': 'No data available'}, status=status.HTTP_404_NOT_FOUND)
+            analysis_date = latest_date
+        
+        # Get cache parameters
+        use_cache = request.query_params.get('use_cache', 'true').lower() == 'true'
+        force_recompute = request.query_params.get('force_recompute', 'false').lower() == 'false'
+        
         if symbol:
             try:
                 stock = Stock.objects.get(symbol__iexact=symbol)
-                result = self._analyze_single_stock(stock)
+                result = self._get_accumulation_analysis(stock, analysis_date, use_cache, force_recompute)
                 return Response(result)
             except Stock.DoesNotExist:
                 return Response(
@@ -416,16 +487,39 @@ class AccumulationAlertView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
         
-        # Analyze all stocks
-        latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
-        if not latest_date:
-            return Response({'error': 'No data available'}, status=status.HTTP_404_NOT_FOUND)
+        # Get stock_type filter (default: regular stocks only)
+        stock_type = request.query_params.get('stock_type', 'stock')
+        date_param = request.query_params.get('date', '').strip()
+        
+        # Determine analysis date
+        if date_param:
+            try:
+                from datetime import datetime
+                analysis_date = datetime.strptime(date_param, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': 'Invalid date format. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            # Use latest available date
+            latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
+            if not latest_date:
+                return Response({'error': 'No data available'}, status=status.HTTP_404_NOT_FOUND)
+            analysis_date = latest_date
         
         alerts = []
+        # Filter by stock_type (default: regular stocks only)
         stocks = Stock.objects.all()
+        if stock_type.lower() != 'all':
+            stocks = stocks.filter(stock_type=stock_type)
+        
+        # Get cache parameters
+        use_cache = request.query_params.get('use_cache', 'true').lower() == 'true'
+        force_recompute = request.query_params.get('force_recompute', 'false').lower() == 'true'
         
         for stock in stocks:
-            result = self._analyze_single_stock(stock)
+            result = self._get_accumulation_analysis(stock, analysis_date, use_cache, force_recompute)
             if result and result.get('alert'):
                 if alert_level == 'all' or result['alert_level'] == alert_level or \
                    (alert_level == 'medium' and result['alert_level'] in ['high', 'medium']):
@@ -436,18 +530,56 @@ class AccumulationAlertView(APIView):
         alerts.sort(key=lambda x: (priority_order.get(x['alert_level'], 3), -x.get('score', 0)))
         
         return Response({
-            'date': str(latest_date),
+            'date': str(analysis_date),
             'total_alerts': len(alerts),
             'high_alerts': len([a for a in alerts if a['alert_level'] == 'high']),
             'medium_alerts': len([a for a in alerts if a['alert_level'] == 'medium']),
             'alerts': alerts
         })
     
-    def _analyze_single_stock(self, stock: Stock) -> Optional[Dict[str, Any]]:
+    def _get_accumulation_analysis(self, stock: Stock, analysis_date, use_cache=True, force_recompute=False):
+        """
+        Get accumulation analysis, using cache if available.
+        
+        Args:
+            stock: Stock instance
+            analysis_date: Date for analysis
+            use_cache: Whether to use cached results
+            force_recompute: Whether to force recomputation
+            
+        Returns:
+            Analysis result dictionary or None
+        """
+        from .models import StockAnalyticsCache
+        
+        # Check cache first (unless forcing recompute)
+        if use_cache and not force_recompute:
+            try:
+                cache_entry = StockAnalyticsCache.objects.get(
+                    stock=stock,
+                    analysis_date=analysis_date,
+                    cache_type='accumulation_alerts'
+                )
+                # Return cached data
+                return cache_entry.analytics_data
+            except StockAnalyticsCache.DoesNotExist:
+                pass
+        
+        # Compute analysis
+        result = self._analyze_single_stock(stock, analysis_date)
+        
+        # Save to cache if result exists (with retry logic for SQLite locking)
+        if result and use_cache:
+            save_analytics_cache_safe(stock, analysis_date, 'accumulation_alerts', result)
+        
+        return result
+    
+    def _analyze_single_stock(self, stock: Stock, analysis_date) -> Optional[Dict[str, Any]]:
         """Analyze a single stock for accumulation patterns."""
-        # Get last 20 days of data
+        # Get data up to and including analysis_date
         data = list(StockData.objects.filter(
-            stock=stock
+            stock=stock,
+            date__lte=analysis_date
         ).order_by('-date')[:20].values(
             'date', 'open_price', 'high_price', 'low_price', 'close_price',
             'total_traded_quantity', 'total_traded_value', 'total_trades'
@@ -551,6 +683,9 @@ class TopStocksToWatchView(APIView):
         symbol: Optional - specific stock symbol or comma-separated list (e.g., "AKJCL" or "AKJCL,RADHI,RFPL")
         limit: Number of stocks to return (default: 20, max: 100) - ignored if symbol is provided
         min_score: Minimum combined score to include (default: 40) - ignored if symbol is provided
+        date: Optional - specific date for analysis (YYYY-MM-DD format). Default: latest available date
+        use_cache: Optional - use cached results if available (default: true)
+        force_recompute: Optional - force recomputation even if cache exists (default: false)
         
     Returns:
         Top N stocks ranked by combined watchability score, or specific stock(s) analysis
@@ -560,6 +695,9 @@ class TopStocksToWatchView(APIView):
     def get(self, request):
         """Get top stocks to watch based on combined analysis."""
         symbol_param = request.query_params.get('symbol', '').strip()
+        date_param = request.query_params.get('date', '').strip()
+        use_cache = request.query_params.get('use_cache', 'true').lower() == 'true'
+        force_recompute = request.query_params.get('force_recompute', 'false').lower() == 'true'
         
         try:
             limit = int(request.query_params.get('limit', 20))
@@ -569,20 +707,39 @@ class TopStocksToWatchView(APIView):
             limit = 20
             min_score = 40
         
-        latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
-        if not latest_date:
-            return Response({'error': 'No data available'}, status=status.HTTP_404_NOT_FOUND)
+        # Determine analysis date
+        if date_param:
+            try:
+                from datetime import datetime
+                analysis_date = datetime.strptime(date_param, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': 'Invalid date format. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            # Use latest available date
+            latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
+            if not latest_date:
+                return Response({'error': 'No data available'}, status=status.HTTP_404_NOT_FOUND)
+            analysis_date = latest_date
+        
+        # Get stock_type filter (default: regular stocks only)
+        stock_type = request.query_params.get('stock_type', 'stock')
         
         # If specific symbol(s) requested
         if symbol_param:
-            return self._analyze_specific_symbols(symbol_param, latest_date)
+            return self._analyze_specific_symbols(symbol_param, analysis_date, use_cache, force_recompute)
         
         # Otherwise, analyze all stocks and return top N
         all_stocks = []
+        # Filter by stock_type (default: regular stocks only)
         stocks = Stock.objects.all()
+        if stock_type.lower() != 'all':
+            stocks = stocks.filter(stock_type=stock_type)
         
         for stock in stocks:
-            result = self._analyze_stock_comprehensive(stock, latest_date)
+            result = self._get_stock_analysis(stock, analysis_date, use_cache, force_recompute, 'top_stocks')
             if result and result['combined_score'] >= min_score:
                 all_stocks.append(result)
         
@@ -592,18 +749,62 @@ class TopStocksToWatchView(APIView):
         top_stocks = all_stocks[:limit]
         
         return Response({
-            'date': str(latest_date),
+            'date': str(analysis_date),
             'total_analyzed': len(stocks),
             'stocks_meeting_criteria': len(all_stocks),
             'returned': len(top_stocks),
             'parameters': {
                 'limit': limit,
-                'min_score': min_score
+                'min_score': min_score,
+                'use_cache': use_cache,
+                'force_recompute': force_recompute
             },
             'stocks': top_stocks
         })
     
-    def _analyze_specific_symbols(self, symbol_param: str, latest_date):
+    def _get_stock_analysis(self, stock: Stock, analysis_date, use_cache=True, force_recompute=False, cache_type='top_stocks'):
+        """
+        Get stock analysis, using cache if available.
+        
+        Args:
+            stock: Stock instance
+            analysis_date: Date for analysis
+            use_cache: Whether to use cached results
+            force_recompute: Whether to force recomputation
+            cache_type: Type of cache ('top_stocks', 'breakout_watchlist', 'accumulation_alerts')
+            
+        Returns:
+            Analysis result dictionary or None
+        """
+        from .models import StockAnalyticsCache
+        
+        # Check cache first (unless forcing recompute)
+        if use_cache and not force_recompute:
+            try:
+                cache_entry = StockAnalyticsCache.objects.get(
+                    stock=stock,
+                    analysis_date=analysis_date,
+                    cache_type=cache_type
+                )
+                # Return cached data
+                return cache_entry.analytics_data
+            except StockAnalyticsCache.DoesNotExist:
+                pass
+        
+        # Compute analysis based on cache type
+        if cache_type == 'top_stocks':
+            result = self._analyze_stock_comprehensive(stock, analysis_date)
+        else:
+            # For other types, we'll compute them separately
+            result = None
+        
+        # Save to cache if result exists (with retry logic for SQLite locking)
+        if result and use_cache:
+            save_analytics_cache_safe(stock, analysis_date, cache_type, result)
+        
+        return result
+    
+    def _analyze_specific_symbols(self, symbol_param: str, analysis_date, use_cache=True, force_recompute=False):
         """Analyze specific stock symbol(s)."""
         # Parse symbols (comma-separated)
         symbols = [s.strip().upper() for s in symbol_param.split(',') if s.strip()]
@@ -621,7 +822,7 @@ class TopStocksToWatchView(APIView):
         for symbol in symbols:
             try:
                 stock = Stock.objects.get(symbol__iexact=symbol)
-                result = self._analyze_stock_comprehensive(stock, latest_date)
+                result = self._get_stock_analysis(stock, analysis_date, use_cache, force_recompute)
                 if result:
                     results.append(result)
                 else:
@@ -646,13 +847,13 @@ class TopStocksToWatchView(APIView):
                 )
             if results:
                 return Response({
-                    'date': str(latest_date),
+                    'date': str(analysis_date),
                     'stock': results[0]
                 })
         
         # Multiple symbols response
         response_data = {
-            'date': str(latest_date),
+            'date': str(analysis_date),
             'requested': len(symbols),
             'returned': len(results),
             'stocks': results
@@ -665,11 +866,18 @@ class TopStocksToWatchView(APIView):
         
         return Response(response_data)
     
-    def _analyze_stock_comprehensive(self, stock: Stock, latest_date) -> Optional[Dict[str, Any]]:
-        """Perform comprehensive analysis combining all signals."""
-        # Get last 30 days of data
+    def _analyze_stock_comprehensive(self, stock: Stock, analysis_date) -> Optional[Dict[str, Any]]:
+        """
+        Perform comprehensive analysis combining all signals.
+        
+        Args:
+            stock: Stock instance
+            analysis_date: Date for which to perform analysis (can be historical)
+        """
+        # Get data up to and including analysis_date
         data = list(StockData.objects.filter(
-            stock=stock
+            stock=stock,
+            date__lte=analysis_date
         ).order_by('-date')[:60].values(
             'date', 'open_price', 'high_price', 'low_price', 'close_price',
             'total_traded_quantity', 'total_traded_value', 'total_trades'
@@ -960,6 +1168,7 @@ class VolumeSpikeDetectorView(APIView):
     - How many times the spike occurred
     - Which specific days had spikes
     - What the volume was compared to (baseline average)
+    - Ranked by highest volume spike ratio
     
     Query Parameters:
         days: Number of recent days to analyze (default: 10, max: 30)
@@ -967,11 +1176,18 @@ class VolumeSpikeDetectorView(APIView):
         baseline_days: Days used to calculate average volume (default: 20)
         symbol: Optional - specific stock or comma-separated list
         min_spikes: Minimum number of spike days to include (default: 1)
+        include_mf: Include mutual funds (default: false)
+        include_debentures: Include debentures/bonds (default: false)
+        limit: Maximum number of results (default: 50)
         
     Returns:
-        Stocks with volume spikes sorted by max spike ratio
+        Stocks with volume spikes ranked by max spike ratio (highest first)
     """
     permission_classes = [AllowAny]
+    
+    # Keywords to identify mutual funds and debentures (same as StockRecommendationsView)
+    EXCLUDE_KEYWORDS_MF = ['fund', 'yojana', 'scheme', 'growth', 'balanced', 'flexi', 'value fund', 'equity fund', 'promotor share','promoter share']
+    EXCLUDE_KEYWORDS_DEBENTURE = ['debenture', 'bond', 'certificate']
 
     def get(self, request):
         """Detect volume spikes in recent days."""
@@ -983,13 +1199,21 @@ class VolumeSpikeDetectorView(APIView):
             baseline_days = int(request.query_params.get('baseline_days', 20))
             baseline_days = min(max(baseline_days, 10), 60)
             min_spikes = int(request.query_params.get('min_spikes', 1))
+            include_mf = request.query_params.get('include_mf', 'false').lower() == 'true'
+            include_debentures = request.query_params.get('include_debentures', 'false').lower() == 'true'
+            limit = int(request.query_params.get('limit', 50))
+            limit = min(max(limit, 1), 200)
         except (ValueError, TypeError):
             days = 10
             threshold = 2.5
             baseline_days = 20
             min_spikes = 1
+            include_mf = False
+            include_debentures = False
+            limit = 50
         
         symbol_param = request.query_params.get('symbol', '').strip()
+        is_specific_symbol = bool(symbol_param)
         
         latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
         if not latest_date:
@@ -1008,8 +1232,31 @@ class VolumeSpikeDetectorView(APIView):
             stocks = Stock.objects.all()
         
         results = []
+        excluded_count = {'mutual_funds': 0, 'debentures': 0}
         
         for stock in stocks:
+            # Filter out mutual funds and debentures (unless specific symbols or include flags)
+            if not is_specific_symbol:
+                name_lower = stock.security_name.lower() if stock.security_name else ''
+                symbol = stock.symbol or ''
+                
+                # Check for mutual fund
+                is_mf = any(kw in name_lower for kw in self.EXCLUDE_KEYWORDS_MF)
+                if is_mf and not include_mf:
+                    excluded_count['mutual_funds'] += 1
+                    continue
+                
+                # Check for debenture/bond
+                is_debenture = any(kw in name_lower for kw in self.EXCLUDE_KEYWORDS_DEBENTURE)
+                # Also check symbol patterns (often debentures have year numbers at end like XXXD2085)
+                if not is_debenture and len(symbol) > 4:
+                    if symbol[-2:].isdigit() and symbol[-4:-2].isdigit():
+                        is_debenture = True
+                
+                if is_debenture and not include_debentures:
+                    excluded_count['debentures'] += 1
+                    continue
+            
             result = self._analyze_volume_spikes(stock, days, threshold, baseline_days)
             if result and result['spike_count'] >= min_spikes:
                 results.append(result)
@@ -1017,15 +1264,31 @@ class VolumeSpikeDetectorView(APIView):
         # Sort by max spike ratio (highest first)
         results.sort(key=lambda x: x['max_spike_ratio'], reverse=True)
         
+        # Add rank to each result
+        for rank, result in enumerate(results, 1):
+            result['rank'] = rank
+        
+        # Apply limit
+        total_before_limit = len(results)
+        results = results[:limit]
+        
         return Response({
             'date': str(latest_date),
             'parameters': {
                 'analysis_days': days,
                 'volume_threshold': f'{threshold}x',
                 'baseline_days': baseline_days,
-                'min_spikes': min_spikes
+                'min_spikes': min_spikes,
+                'include_mutual_funds': include_mf,
+                'include_debentures': include_debentures,
+                'limit': limit
             },
-            'total_stocks_with_spikes': len(results),
+            'summary': {
+                'total_stocks_with_spikes': total_before_limit,
+                'showing': len(results),
+                'excluded_mutual_funds': excluded_count['mutual_funds'],
+                'excluded_debentures': excluded_count['debentures']
+            },
             'stocks': results
         })
     
@@ -2260,15 +2523,39 @@ class BreakoutWatchlistView(APIView):
 
     def get(self, request):
         """Get potential breakout candidates."""
-        latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
-        if not latest_date:
-            return Response({'error': 'No data available'}, status=status.HTTP_404_NOT_FOUND)
+        # Get stock_type filter (default: regular stocks only)
+        stock_type = request.query_params.get('stock_type', 'stock')
+        date_param = request.query_params.get('date', '').strip()
+        
+        # Determine analysis date
+        if date_param:
+            try:
+                from datetime import datetime
+                analysis_date = datetime.strptime(date_param, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': 'Invalid date format. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            # Use latest available date
+            latest_date = StockData.objects.aggregate(latest=Max('date'))['latest']
+            if not latest_date:
+                return Response({'error': 'No data available'}, status=status.HTTP_404_NOT_FOUND)
+            analysis_date = latest_date
         
         watchlist = []
+        # Filter by stock_type (default: regular stocks only)
         stocks = Stock.objects.all()
+        if stock_type.lower() != 'all':
+            stocks = stocks.filter(stock_type=stock_type)
+        
+        # Get cache parameters
+        use_cache = request.query_params.get('use_cache', 'true').lower() == 'true'
+        force_recompute = request.query_params.get('force_recompute', 'false').lower() == 'true'
         
         for stock in stocks:
-            result = self._analyze_breakout_potential(stock)
+            result = self._get_breakout_analysis(stock, analysis_date, use_cache, force_recompute)
             if result:
                 watchlist.append(result)
         
@@ -2276,15 +2563,53 @@ class BreakoutWatchlistView(APIView):
         watchlist.sort(key=lambda x: x['breakout_score'], reverse=True)
         
         return Response({
-            'date': str(latest_date),
+            'date': str(analysis_date),
             'total_candidates': len(watchlist),
             'watchlist': watchlist[:30]  # Top 30
         })
     
-    def _analyze_breakout_potential(self, stock: Stock) -> Optional[Dict[str, Any]]:
+    def _get_breakout_analysis(self, stock: Stock, analysis_date, use_cache=True, force_recompute=False):
+        """
+        Get breakout analysis, using cache if available.
+        
+        Args:
+            stock: Stock instance
+            analysis_date: Date for analysis
+            use_cache: Whether to use cached results
+            force_recompute: Whether to force recomputation
+            
+        Returns:
+            Analysis result dictionary or None
+        """
+        from .models import StockAnalyticsCache
+        
+        # Check cache first (unless forcing recompute)
+        if use_cache and not force_recompute:
+            try:
+                cache_entry = StockAnalyticsCache.objects.get(
+                    stock=stock,
+                    analysis_date=analysis_date,
+                    cache_type='breakout_watchlist'
+                )
+                # Return cached data
+                return cache_entry.analytics_data
+            except StockAnalyticsCache.DoesNotExist:
+                pass
+        
+        # Compute analysis
+        result = self._analyze_breakout_potential(stock, analysis_date)
+        
+        # Save to cache if result exists (with retry logic for SQLite locking)
+        if result and use_cache:
+            save_analytics_cache_safe(stock, analysis_date, 'breakout_watchlist', result)
+        
+        return result
+    
+    def _analyze_breakout_potential(self, stock: Stock, analysis_date) -> Optional[Dict[str, Any]]:
         """Analyze breakout potential for a stock."""
         data = list(StockData.objects.filter(
-            stock=stock
+            stock=stock,
+            date__lte=analysis_date
         ).order_by('-date')[:60].values(
             'date', 'open_price', 'high_price', 'low_price', 'close_price',
             'total_traded_quantity', 'total_traded_value', 'total_trades'

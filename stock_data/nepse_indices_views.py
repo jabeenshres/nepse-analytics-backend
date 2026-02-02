@@ -509,9 +509,9 @@ class NepseIndicesCompareView(APIView):
             stats = queryset.aggregate(
                 avg_volume=Avg('turnover_volume'),
                 total_turnover=Sum('turnover_value'),
-                positive_days=Count('id', filter=lambda: NepseIndex.objects.filter(percentage_change__gt=0)),
             )
             
+            # Count positive days separately (can't use lambda in aggregate filter)
             positive_days = queryset.filter(percentage_change__gt=0).count()
             total_days = queryset.count()
             
@@ -566,8 +566,14 @@ class NepseIndicesListView(APIView):
                 'record_count': record_count,
                 'latest_date': str(latest.date) if latest else None,
                 'latest_close': float(latest.close) if latest else None,
+                'high': float(latest.high) if latest else None,
+                'low': float(latest.low) if latest else None,
                 'daily_change': float(latest.absolute_change) if latest else None,
                 'daily_change_percent': float(latest.percentage_change) if latest else None,
+                'fifty_two_weeks_high': float(latest.fifty_two_weeks_high) if latest else None,
+                'fifty_two_weeks_low': float(latest.fifty_two_weeks_low) if latest else None,
+                'turnover_value': float(latest.turnover_value) if latest else None,
+                'turnover_volume': latest.turnover_volume if latest else None,
             })
         
         return Response({

@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import Stock, StockData, Portfolio, PortfolioHolding, Trade, BacktestResult, FloorsheetData, NepseIndex
+from .models import Stock, StockData, Portfolio, PortfolioHolding, Trade, BacktestResult, FloorsheetData, NepseIndex, StockAnalyticsCache
 
 
 @admin.register(Stock)
 class StockAdmin(admin.ModelAdmin):
-    list_display = ['symbol', 'security_name', 'security_id']
+    list_display = ['symbol', 'security_name', 'security_id','stock_type']
     search_fields = ['symbol', 'security_name']
     list_filter = ['symbol']
 
@@ -97,3 +97,32 @@ class NepseIndexAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(StockAnalyticsCache)
+class StockAnalyticsCacheAdmin(admin.ModelAdmin):
+    list_display = ['stock', 'cache_type', 'analysis_date', 'computed_at', 'get_score']
+    list_filter = ['cache_type', 'analysis_date', 'computed_at', 'stock__stock_type']
+    search_fields = ['stock__symbol', 'stock__security_name']
+    date_hierarchy = 'analysis_date'
+    readonly_fields = ['computed_at']
+    ordering = ['-analysis_date', '-computed_at', 'cache_type']
+    
+    def get_score(self, obj):
+        """Display score from cached analytics data."""
+        if not obj.analytics_data:
+            return 'N/A'
+        
+        # Different cache types have different score fields
+        if obj.cache_type == 'top_stocks' and 'combined_score' in obj.analytics_data:
+            return obj.analytics_data['combined_score']
+        elif obj.cache_type == 'breakout_watchlist' and 'breakout_score' in obj.analytics_data:
+            return obj.analytics_data['breakout_score']
+        elif obj.cache_type == 'accumulation_alerts' and 'score' in obj.analytics_data:
+            return obj.analytics_data['score']
+        return 'N/A'
+    get_score.short_description = 'Score'
+    
+    def get_queryset(self, request):
+        """Optimize query by selecting related stock."""
+        return super().get_queryset(request).select_related('stock')

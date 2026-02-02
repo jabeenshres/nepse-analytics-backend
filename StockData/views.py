@@ -34,12 +34,17 @@ class LoadStockData(APIView):
 
     def post(self, request, format=None):
         days_back = request.data.get("date", 0)
-        scraper = NepalStockScraper()
+        headless = request.data.get("headless", True)  # Default to headless mode
+        scraper = NepalStockScraper(headless=headless)
 
         try:
             scraper.load_page("https://www.nepalstock.com/today-price")
             scraper.loop_through_dates(Stock, StockData, days_back)
-            return Response("Data has been loaded successfully", status=status.HTTP_200_OK)
+            return Response({
+                "message": "Data has been loaded successfully",
+                "days_back": days_back,
+                "headless": headless
+            }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         finally:
