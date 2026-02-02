@@ -2,7 +2,7 @@
 Serializers for stock data models.
 """
 from rest_framework import serializers, validators
-from .models import StockData, Stock
+from .models import StockData, Stock, Portfolio, PortfolioHolding, Trade, BacktestResult
 
 
 class StockDataSerializer(serializers.ModelSerializer):
@@ -118,3 +118,110 @@ class StockListSerializer(serializers.ModelSerializer):
     def get_data_count(self, obj):
         """Get total count of stock data entries for this stock."""
         return obj.data.count()
+
+
+class PortfolioHoldingSerializer(serializers.ModelSerializer):
+    """
+    Serializer for PortfolioHolding model.
+    """
+    stock_symbol = serializers.CharField(source='stock.symbol', read_only=True)
+    stock_name = serializers.CharField(source='stock.security_name', read_only=True)
+    market_value = serializers.DecimalField(
+        max_digits=15, decimal_places=2, read_only=True
+    )
+    profit_loss = serializers.DecimalField(
+        max_digits=15, decimal_places=2, read_only=True
+    )
+    profit_loss_percentage = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+
+    class Meta:
+        model = PortfolioHolding
+        fields = [
+            'id', 'portfolio', 'stock', 'stock_symbol', 'stock_name',
+            'quantity', 'average_buy_price', 'current_price',
+            'market_value', 'profit_loss', 'profit_loss_percentage',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class PortfolioSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Portfolio model.
+    """
+    holdings = PortfolioHoldingSerializer(many=True, read_only=True)
+    total_return = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+    holdings_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Portfolio
+        fields = [
+            'id', 'name', 'description', 'initial_capital', 'current_value',
+            'total_return', 'holdings_count', 'holdings',
+            'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'current_value', 'created_at', 'updated_at']
+
+    def get_holdings_count(self, obj):
+        """Get count of holdings in portfolio."""
+        return obj.holdings.count()
+
+
+class TradeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Trade model.
+    """
+    stock_symbol = serializers.CharField(source='stock.symbol', read_only=True)
+    stock_name = serializers.CharField(source='stock.security_name', read_only=True)
+    return_amount = serializers.DecimalField(
+        max_digits=15, decimal_places=2, read_only=True
+    )
+    return_percentage = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+
+    class Meta:
+        model = Trade
+        fields = [
+            'id', 'portfolio', 'stock', 'stock_symbol', 'stock_name',
+            'trade_type', 'quantity', 'entry_price', 'exit_price',
+            'entry_date', 'exit_date', 'return_amount', 'return_percentage',
+            'notes', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
+
+    def validate(self, attrs):
+        """Validate trade data."""
+        if attrs.get('exit_price') and attrs.get('entry_price'):
+            if attrs['exit_price'] < 0 or attrs['entry_price'] < 0:
+                raise serializers.ValidationError("Prices cannot be negative.")
+        
+        if attrs.get('exit_date') and attrs.get('entry_date'):
+            if attrs['exit_date'] < attrs['entry_date']:
+                raise serializers.ValidationError(
+                    "Exit date cannot be before entry date."
+                )
+        
+        return attrs
+
+
+class BacktestResultSerializer(serializers.ModelSerializer):
+    """
+    Serializer for BacktestResult model.
+    """
+    stock_symbol = serializers.CharField(source='stock.symbol', read_only=True)
+
+    class Meta:
+        model = BacktestResult
+        fields = [
+            'id', 'stock', 'stock_symbol', 'strategy_name',
+            'start_date', 'end_date', 'initial_capital', 'final_value',
+            'total_return', 'win_rate', 'max_drawdown', 'sharpe_ratio',
+            'total_trades', 'winning_trades', 'losing_trades',
+            'parameters', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
