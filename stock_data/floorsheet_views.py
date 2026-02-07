@@ -22,6 +22,7 @@ from .floorsheet_scraper import (
     parse_floorsheet_html,
     save_floorsheet_to_db
 )
+from .nepalstock_floorsheet_scraper import NepalstockFloorsheetScraper
 
 
 class FloorsheetUploadView(APIView):
@@ -71,10 +72,15 @@ class FloorsheetUploadView(APIView):
             html_content, symbol.upper()
         )
         
-        # Save to database if requested
+        # Save to database if requested (use bulk insert for better performance)
         save_stats = None
         if save_to_db and transactions:
-            save_stats = save_floorsheet_to_db(transactions, symbol.upper())
+            save_stats = save_floorsheet_to_db(
+                transactions, 
+                symbol.upper(), 
+                skip_existing=True,
+                bulk_insert=True  # Use bulk insert for better performance
+            )
         
         # Prepare response
         response_data = {
@@ -175,17 +181,18 @@ class FloorsheetScrapeView(APIView):
             symbols = [s.strip() for s in symbols.split(',') if s.strip()]
         
         # If no symbols provided, fetch ALL symbols from Stock table
+        # Filter to only regular stocks (stock_type == 'stock'), not mutual funds or others
         if not symbols:
-            all_stocks = Stock.objects.all().values_list('symbol', flat=True)
+            all_stocks = Stock.objects.filter(stock_type='stock').values_list('symbol', flat=True)
             symbols = list(all_stocks)
             
             if not symbols:
                 return Response(
-                    {'error': 'No stocks found in database'},
+                    {'error': 'No stocks found in database (filtered by stock_type=stock)'},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
-            print(f"No symbols provided - scraping ALL {len(symbols)} stocks from database")
+            print(f"No symbols provided - scraping ALL {len(symbols)} stocks (stock_type=stock) from database")
         
         # Verify all stocks exist
         invalid_symbols = []
@@ -310,6 +317,88 @@ class FloorsheetScrapeView(APIView):
         finally:
             # Always close the WebDriver
             scraper.close()
+
+
+class NepalstockFloorsheetScrapeView(APIView):
+    """
+    Scrape ALL floorsheet data directly from nepalstock.com using Selenium.
+    
+    POST /api/stock_data/floorsheet/nepalstock-scrape/
+    
+    Body:
+        {
+            "save_to_db": true,  // Optional: Save to database (default: true)
+            "headless": true     // Optional: Run in headless mode (default: true)
+        }
+    
+    This scraper:
+    1. Loads the nepalstock.com floorsheet page (no filters)
+    2. Sets "Items Per Page" to 500
+    3. Clicks the "Filter" button
+    4. Extracts ALL data from the table (all symbols)
+    5. Maps "Contract Number" to transaction_no
+    6. Extracts symbol from each row
+    7. Saves to database grouped by symbol using FloorsheetData model
+    
+    Note: The scraper uses the same FloorsheetData model as merolagani.com scraper.
+    No symbol or date filters are applied - it scrapes ALL available data.
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        save_to_db = request.data.get('save_to_db', True)
+        headless = request.data.get('headless', False)  # Default to False for easier debugging
+        
+        scraper = None
+        try:
+            scraper = NepalstockFloorsheetScraper(headless=headless)
+            
+            # Scrape all data (no symbol/date filters)
+            transactions, metadata = scraper.scrape_from_url(
+                save_to_db=save_to_db
+            )
+            
+            # Build response
+            response_data = {
+                'success': True,
+                'transactions_count': len(transactions),
+                'symbols_found': metadata.get('symbols_found', []),
+                'metadata': metadata,
+            }
+            
+            if save_to_db:
+                response_data['save_info'] = {
+                    'saved_to_db': True,
+                    'symbols_saved': len(metadata.get('symbols_found', []))
+                }
+            
+            # Include sample transactions (first 5)
+            if transactions:
+                response_data['sample_transactions'] = [
+                    {
+                        'symbol': item.get('symbol', 'UNKNOWN'),
+                        'transaction_date': item['transaction'].transaction_date.strftime('%Y-%m-%d'),
+                        'transaction_no': item['transaction'].transaction_no,
+                        'buyer_broker': item['transaction'].buyer_broker,
+                        'seller_broker': item['transaction'].seller_broker,
+                        'quantity': item['transaction'].quantity,
+                        'rate': float(item['transaction'].rate),
+                        'amount': float(item['transaction'].amount),
+                    }
+                    for item in transactions[:5]
+                ]
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Scraping failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        finally:
+            # Always close the WebDriver
+            if scraper:
+                scraper.close()
 
 
 class FloorsheetDataView(APIView):

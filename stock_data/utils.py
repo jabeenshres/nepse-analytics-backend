@@ -251,27 +251,16 @@ class NepalStockScraper:
                 f"({total_days} days)"
             )
             
-            # Get all existing dates in the range to skip
-            existing_dates = set(
-                StockData.objects.filter(
-                    date__gte=date_from_obj,
-                    date__lte=date_to_obj
-                ).values_list('date', flat=True).distinct()
-            )
-            logger.info(f"Found {len(existing_dates)} dates with existing data")
+            # Note: We no longer skip entire dates - bulk insert will handle skipping individual records
+            # This allows filling in missing records for dates that have partial data
+            logger.info("Processing all dates - bulk insert will skip existing stock+date combinations")
 
             while current_date.date() >= date_from_obj:
                 date_str = current_date.strftime(NEPAL_STOCK_DATE_FORMAT)
                 date_obj = current_date.date()
                 
-                # Check if data already exists for this date
-                if date_obj in existing_dates:
-                    stats['dates_skipped'] += 1
-                    logger.info(
-                        f"Skipping date {date_str} - data already exists in database"
-                    )
-                    current_date -= timedelta(days=1)
-                    continue
+                # Optional: Check if date has complete data (all stocks) - can still process to fill gaps
+                # For now, we process all dates and let bulk insert handle skipping
                 
                 logger.info(f"Processing data for date: {date_str}")
                 try:
@@ -316,7 +305,10 @@ class NepalStockScraper:
 
     def save_to_database(self, file_path, Stock, StockData):
         """
-        Save CSV data to database.
+        Save CSV data to database using bulk insert for better performance.
+        
+        Validates data, prepares all records, then bulk inserts new records.
+        Skips existing stock+date combinations.
         
         Args:
             file_path: Path to CSV file
@@ -324,66 +316,364 @@ class NepalStockScraper:
             StockData: StockData model class
         
         Returns:
-            dict: Statistics with 'created' and 'updated' counts
+            dict: Statistics with 'created', 'updated', 'skipped', 'errors' counts
         
         Raises:
             Exception: If saving to database fails
         """
-        stats = {'created': 0, 'updated': 0}
+        from django.db import transaction as db_transaction
+        from datetime import datetime as dt
+        
+        stats = {
+            'created': 0, 
+            'updated': 0, 
+            'skipped': 0,
+            'errors': 0,
+            'stocks_created': 0,
+            'total_csv_rows': 0,
+            'error_messages': []
+        }
+        
         try:
             dataframe = pd.read_csv(file_path, on_bad_lines="skip")
             dataframe.columns = dataframe.columns.str.strip().str.lower()
+            stats['total_csv_rows'] = len(dataframe)
+            
+            logger.info(f"Loaded {len(dataframe)} records from CSV file: {file_path}")
 
-            records_processed = 0
-            for _, row in dataframe.iterrows():
-                row = row.where(pd.notna(row), None)
-
-                stock, stock_created = Stock.objects.get_or_create(
-                    symbol=row['symbol'],
-                    security_id=row['security id'],
-                    security_name=row['security name'],
-                    defaults={
-                        "fifty_two_weeks_high": row['fifty two week high'] or 0.0,
-                        "fifty_two_weeks_low": row['fifty two week low'] or 0.0,
-                    }
-                )
+            # Step 1: Validate and prepare all stock records
+            stocks_to_create = {}
+            stocks_dict = {}  # Cache for existing stocks
+            stock_data_to_create = []
+            
+            # Get all unique symbols from CSV
+            unique_symbols = dataframe['symbol'].unique()
+            
+            # Fetch or create all stocks first
+            for symbol in unique_symbols:
+                symbol_upper = str(symbol).strip().upper()
+                try:
+                    stock = Stock.objects.get(symbol=symbol_upper)
+                    stocks_dict[symbol_upper] = stock
+                except Stock.DoesNotExist:
+                    # Will create later
+                    stocks_dict[symbol_upper] = None
+            
+            # Step 2: Process all rows and prepare data
+            for idx, row in dataframe.iterrows():
+                try:
+                    row = row.where(pd.notna(row), None)
+                    
+                    # Validate required fields
+                    symbol = str(row['symbol']).strip().upper() if row.get('symbol') else None
+                    security_id = row.get('security id')
+                    business_date = row.get('business date')
+                    
+                    if not symbol or not security_id or not business_date:
+                        stats['errors'] += 1
+                        stats['error_messages'].append(f"Row {idx+1}: Missing required fields (symbol, security_id, or date)")
+                        continue
+                    
+                    # Parse date - handle multiple formats
+                    try:
+                        if isinstance(business_date, str):
+                            # Clean the date string
+                            business_date = business_date.strip()
+                            # Try different date formats (most common first)
+                            date_obj = None
+                            date_formats = [
+                                '%Y-%m-%d',      # 2026-02-02
+                                '%m/%d/%Y',       # 02/02/2026
+                                '%d/%m/%Y',       # 02/02/2026 (European)
+                                '%Y.%m.%d',       # 2026.02.02
+                                '%d-%m-%Y',       # 02-02-2026
+                                '%Y/%m/%d',       # 2026/02/02
+                            ]
+                            for fmt in date_formats:
+                                try:
+                                    date_obj = dt.strptime(business_date, fmt).date()
+                                    break
+                                except ValueError:
+                                    continue
+                            if not date_obj:
+                                # Try pandas parsing as fallback
+                                try:
+                                    date_obj = pd.to_datetime(business_date, errors='raise').date()
+                                except:
+                                    stats['errors'] += 1
+                                    stats['error_messages'].append(f"Row {idx+1}: Invalid date format: '{business_date}'")
+                                    continue
+                        else:
+                            # Handle pandas datetime or other types
+                            try:
+                                date_obj = pd.to_datetime(business_date, errors='raise').date()
+                            except:
+                                stats['errors'] += 1
+                                stats['error_messages'].append(f"Row {idx+1}: Date parsing error: {business_date} (type: {type(business_date)})")
+                                continue
+                    except Exception as e:
+                        stats['errors'] += 1
+                        stats['error_messages'].append(f"Row {idx+1}: Date parsing error: {e} (value: {business_date})")
+                        continue
+                    
+                    # Get or prepare stock
+                    stock = stocks_dict.get(symbol)
+                    if not stock:
+                        # Prepare stock for creation
+                        if symbol not in stocks_to_create:
+                            stocks_to_create[symbol] = {
+                                'symbol': symbol,
+                                'security_id': int(security_id) if security_id else None,
+                                'security_name': str(row.get('security name', '')).strip() or symbol,
+                                'fifty_two_weeks_high': float(row.get('fifty two week high', 0) or 0),
+                                'fifty_two_weeks_low': float(row.get('fifty two week low', 0) or 0),
+                            }
+                        # Will create stock later, store data with symbol reference
+                        stock = None
+                    
+                    # Validate numeric fields
+                    try:
+                        open_price = float(row.get('open price', 0) or 0)
+                        high_price = float(row.get('high price', 0) or 0)
+                        low_price = float(row.get('low price', 0) or 0)
+                        close_price = float(row.get('close price', 0) or 0)
+                        total_traded_quantity = int(row.get('total traded quantity', 0) or 0)
+                        total_traded_value = float(row.get('total traded value', 0) or 0)
+                        previous_day_close_price = float(row.get('previous day close price', 0) or 0)
+                        last_updated_price = float(row.get('last updated price', 0) or 0)
+                        total_trades = int(row.get('total trades', 0) or 0)
+                        average_traded_price = float(row.get('average traded price', 0) or 0)
+                        market_cap = None
+                        if row.get('market capitalization') and not pd.isna(row.get('market capitalization')):
+                            market_cap = float(row['market capitalization'])
+                    except (ValueError, TypeError) as e:
+                        stats['errors'] += 1
+                        stats['error_messages'].append(f"Row {idx+1}: Invalid numeric value: {e}")
+                        continue
+                    
+                    # Prepare StockData object
+                    if stock:
+                        # Existing stock - store with stock reference
+                        stock_data_to_create.append({
+                            'stock': stock,
+                            'date': date_obj,
+                            'open_price': open_price,
+                            'high_price': high_price,
+                            'low_price': low_price,
+                            'close_price': close_price,
+                            'total_traded_quantity': total_traded_quantity,
+                            'total_traded_value': total_traded_value,
+                            'previous_day_close_price': previous_day_close_price,
+                            'last_updated_price': last_updated_price,
+                            'total_trades': total_trades,
+                            'average_traded_price': average_traded_price,
+                            'market_capitalization': market_cap,
+                        })
+                    else:
+                        # New stock - will create stock first, then data
+                        stock_data_to_create.append({
+                            'symbol': symbol,
+                            'date': date_obj,
+                            'open_price': open_price,
+                            'high_price': high_price,
+                            'low_price': low_price,
+                            'close_price': close_price,
+                            'total_traded_quantity': total_traded_quantity,
+                            'total_traded_value': total_traded_value,
+                            'previous_day_close_price': previous_day_close_price,
+                            'last_updated_price': last_updated_price,
+                            'total_trades': total_trades,
+                            'average_traded_price': average_traded_price,
+                            'market_capitalization': market_cap,
+                        })
                 
-                if stock_created:
-                    stats['created'] += 1
-
-                stock_data, data_created = StockData.objects.update_or_create(
-                    stock=stock,
-                    date=row['business date'],
-                    defaults={
-                        "open_price": row['open price'] or 0.0,
-                        "high_price": row['high price'] or 0.0,
-                        "low_price": row['low price'] or 0.0,
-                        "close_price": row['close price'] or 0.0,
-                        "total_traded_quantity": row['total traded quantity'] or 0,
-                        "total_traded_value": row['total traded value'] or 0.0,
-                        "previous_day_close_price": row['previous day close price'] or 0.0,
-                        "last_updated_price": row['last updated price'] or 0.0,
-                        "total_trades": row['total trades'] or 0,
-                        "average_traded_price": row['average traded price'] or 0.0,
-                        "market_capitalization": (
-                            None if pd.isna(row['market capitalization'])
-                            else row['market capitalization']
-                        ),
-                    }
-                )
+                except Exception as e:
+                    stats['errors'] += 1
+                    stats['error_messages'].append(f"Row {idx+1}: Unexpected error: {e}")
+                    logger.error(f"Error processing row {idx+1}: {e}")
+                    continue
+            
+            # Step 3: Bulk create stocks first
+            if stocks_to_create:
+                with db_transaction.atomic():
+                    stock_objects = [
+                        Stock(**stock_data) for stock_data in stocks_to_create.values()
+                    ]
+                    created_stocks = Stock.objects.bulk_create(
+                        stock_objects,
+                        ignore_conflicts=True
+                    )
+                    stats['stocks_created'] = len(created_stocks)
+                    
+                    # Update stocks_dict with newly created stocks
+                    for stock in created_stocks:
+                        stocks_dict[stock.symbol] = stock
+                    logger.info(f"Created {len(created_stocks)} new stocks")
+            
+            # Step 4: Convert all data to StockData objects and check for existing records
+            if stock_data_to_create:
+                # First, resolve all symbols to stock objects
+                stock_data_objects = []
+                for item in stock_data_to_create:
+                    if 'symbol' in item:
+                        # New stock - get from stocks_dict (should exist after Step 3)
+                        symbol = item['symbol']
+                        stock = stocks_dict.get(symbol)
+                        if not stock:
+                            stats['errors'] += 1
+                            stats['error_messages'].append(f"Stock {symbol} not found after creation")
+                            continue
+                        stock_data_objects.append(StockData(
+                            stock=stock,
+                            date=item['date'],
+                            open_price=item['open_price'],
+                            high_price=item['high_price'],
+                            low_price=item['low_price'],
+                            close_price=item['close_price'],
+                            total_traded_quantity=item['total_traded_quantity'],
+                            total_traded_value=item['total_traded_value'],
+                            previous_day_close_price=item['previous_day_close_price'],
+                            last_updated_price=item['last_updated_price'],
+                            total_trades=item['total_trades'],
+                            average_traded_price=item['average_traded_price'],
+                            market_capitalization=item['market_capitalization'],
+                        ))
+                    else:
+                        # Existing stock - already has stock reference
+                        stock_data_objects.append(StockData(
+                            stock=item['stock'],
+                            date=item['date'],
+                            open_price=item['open_price'],
+                            high_price=item['high_price'],
+                            low_price=item['low_price'],
+                            close_price=item['close_price'],
+                            total_traded_quantity=item['total_traded_quantity'],
+                            total_traded_value=item['total_traded_value'],
+                            previous_day_close_price=item['previous_day_close_price'],
+                            last_updated_price=item['last_updated_price'],
+                            total_trades=item['total_trades'],
+                            average_traded_price=item['average_traded_price'],
+                            market_capitalization=item['market_capitalization'],
+                        ))
                 
-                if not data_created:
-                    stats['updated'] += 1
-                
-                records_processed += 1
+                # Get existing stock+date combinations to skip
+                if stock_data_objects:
+                    # Extract unique stock_ids and dates for efficient querying
+                    unique_stock_ids = list(set(sd.stock.id for sd in stock_data_objects))
+                    unique_dates = list(set(sd.date for sd in stock_data_objects))
+                    
+                    # Query existing combinations in batches if needed (for very large datasets)
+                    existing_combinations = set(
+                        StockData.objects.filter(
+                            stock_id__in=unique_stock_ids,
+                            date__in=unique_dates
+                        ).values_list('stock_id', 'date')
+                    )
+                    
+                    logger.info(
+                        f"Found {len(existing_combinations)} existing stock+date combinations "
+                        f"out of {len(stock_data_objects)} records to process"
+                    )
+                    
+                    # Filter out existing combinations
+                    new_data = [
+                        sd for sd in stock_data_objects
+                        if (sd.stock.id, sd.date) not in existing_combinations
+                    ]
+                    
+                    skipped_count = len(stock_data_objects) - len(new_data)
+                    stats['skipped'] += skipped_count
+                    
+                    logger.info(
+                        f"Prepared {len(new_data)} new records to insert "
+                        f"(skipping {skipped_count} existing records)"
+                    )
+                    
+                    # Bulk create new records
+                    if new_data:
+                        try:
+                            with db_transaction.atomic():
+                                created = StockData.objects.bulk_create(
+                                    new_data,
+                                    ignore_conflicts=True
+                                )
+                                stats['created'] = len(created)
+                                logger.info(f"✓ Bulk created {len(created)} new stock data records")
+                        except Exception as e:
+                            logger.error(f"Error during bulk_create: {e}", exc_info=True)
+                            # Fallback: try individual inserts for debugging
+                            logger.warning("Attempting individual inserts for remaining records...")
+                            created_count = 0
+                            for sd in new_data:
+                                try:
+                                    StockData.objects.update_or_create(
+                                        stock=sd.stock,
+                                        date=sd.date,
+                                        defaults={
+                                            'open_price': sd.open_price,
+                                            'high_price': sd.high_price,
+                                            'low_price': sd.low_price,
+                                            'close_price': sd.close_price,
+                                            'total_traded_quantity': sd.total_traded_quantity,
+                                            'total_traded_value': sd.total_traded_value,
+                                            'previous_day_close_price': sd.previous_day_close_price,
+                                            'last_updated_price': sd.last_updated_price,
+                                            'total_trades': sd.total_trades,
+                                            'average_traded_price': sd.average_traded_price,
+                                            'market_capitalization': sd.market_capitalization,
+                                        }
+                                    )
+                                    created_count += 1
+                                except Exception as e2:
+                                    stats['errors'] += 1
+                                    stats['error_messages'].append(
+                                        f"Failed to insert {sd.stock.symbol} for {sd.date}: {e2}"
+                                    )
+                            stats['created'] += created_count
+                            logger.info(f"✓ Created {created_count} records via fallback method")
+                    else:
+                        logger.info("No new records to insert (all records already exist)")
+            
+            # Note: Updates are handled by checking existing records before bulk_create
+            # If you need to update existing records, use update_or_create or separate update logic
 
+            # Calculate summary
+            total_processed = stats['created'] + stats['skipped'] + stats['errors']
             logger.info(
-                f"Processed {records_processed} records from {file_path}. "
-                f"Created: {stats['created']}, Updated: {stats['updated']}"
+                f"\n{'='*60}\n"
+                f"CSV Processing Summary for: {file_path}\n"
+                f"{'='*60}\n"
+                f"Total CSV rows: {stats['total_csv_rows']}\n"
+                f"Records processed: {total_processed}\n"
+                f"  ✓ Created: {stats['created']}\n"
+                f"  ⊘ Skipped (already exist): {stats['skipped']}\n"
+                f"  ✗ Errors: {stats['errors']}\n"
+                f"New stocks created: {stats['stocks_created']}\n"
+                f"{'='*60}\n"
             )
+            
+            if stats['error_messages']:
+                logger.warning(
+                    f"⚠ Encountered {len(stats['error_messages'])} errors during processing. "
+                    f"Showing first 10 errors:"
+                )
+                for i, msg in enumerate(stats['error_messages'][:10], 1):
+                    logger.warning(f"  {i}. {msg}")
+                if len(stats['error_messages']) > 10:
+                    logger.warning(f"  ... and {len(stats['error_messages']) - 10} more errors")
+            
+            # Warn if there's a significant discrepancy
+            if stats['total_csv_rows'] > 0:
+                processed_percentage = (total_processed / stats['total_csv_rows']) * 100
+                if processed_percentage < 95:
+                    logger.warning(
+                        f"⚠ Only {processed_percentage:.1f}% of CSV rows were processed. "
+                        f"This might indicate data quality issues or parsing errors."
+                    )
+            
             return stats
         except Exception as e:
-            logger.error(f"Error while saving data to the database: {e}")
+            logger.error(f"Error while saving data to the database: {e}", exc_info=True)
             raise Exception(f"Error while saving data to the database: {e}")
 
     def close(self):

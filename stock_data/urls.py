@@ -29,6 +29,7 @@ from .unusual_activity_views import (
 from .floorsheet_views import (
     FloorsheetUploadView,
     FloorsheetScrapeView,
+    NepalstockFloorsheetScrapeView,
     FloorsheetDataView,
     FloorsheetAnalysisView,
     BrokerActivityView,
@@ -90,6 +91,7 @@ urlpatterns = [
     # Floorsheet data endpoints
     path('floorsheet/upload/', FloorsheetUploadView.as_view(), name='floorsheet-upload'),
     path('floorsheet/scrape/', FloorsheetScrapeView.as_view(), name='floorsheet-scrape'),
+    path('floorsheet/nepalstock-scrape/', NepalstockFloorsheetScrapeView.as_view(), name='nepalstock-floorsheet-scrape'),
     path('floorsheet/data/', FloorsheetDataView.as_view(), name='floorsheet-data'),
     path('floorsheet/analysis/', FloorsheetAnalysisView.as_view(), name='floorsheet-analysis'),
     path('floorsheet/broker/', BrokerActivityView.as_view(), name='broker-activity'),
