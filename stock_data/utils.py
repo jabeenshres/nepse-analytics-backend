@@ -3,16 +3,23 @@ Utilities for scraping stock data from Nepal Stock Exchange.
 """
 import logging
 import os
+import re
 import tempfile
 import time
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import pandas as pd
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException, NoSuchElementException
+from selenium.common.exceptions import (
+    WebDriverException,
+    NoSuchElementException,
+    StaleElementReferenceException,
+)
 
 from .constants import NEPAL_STOCK_DATE_FORMAT
+from .nepse_calendar import is_trading_day
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +33,46 @@ class NepalStockScraper:
     DATE_CHANGE_WAIT_TIME = 3
     EXPECTED_PAGE_TITLE = "Nepal Stock Exchange"
 
-    def __init__(self):
-        """Initialize the scraper with Chrome WebDriver."""
+    def __init__(self, headless: bool = True):
+        """
+        Initialize the scraper with Chrome WebDriver.
+
+        Args:
+            headless: Run Chrome without a visible window (default: True).
+                The option set mirrors NepalstockFloorsheetScraper, which is known
+                to work headless on this machine.
+        """
         self.temp_dir = tempfile.mkdtemp()
+        self.headless = headless
         chrome_options = webdriver.ChromeOptions()
+
+        if headless:
+            chrome_options.add_argument("--headless=new")
+
+        # Essential options (same set that works for the floorsheet scraper)
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--window-size=1920,1080")
+
+        # Disable automation detection
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option("useAutomationExtension", False)
+        chrome_options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+
         download_preferences = {"download.default_directory": self.temp_dir}
         chrome_options.add_experimental_option("prefs", download_preferences)
         try:
             self.driver = webdriver.Chrome(options=chrome_options)
-            logger.info("Chrome WebDriver initialized successfully")
+            self.driver.implicitly_wait(3)
+            print(f"  ✓ Chrome started ({'headless' if headless else 'visible'})")
+            logger.info(
+                f"Chrome WebDriver initialized successfully (headless={headless})"
+            )
         except WebDriverException as e:
             logger.error(f"Failed to initialize WebDriver: {e}")
             raise
@@ -50,40 +88,120 @@ class NepalStockScraper:
             Exception: If page title doesn't match expected title
         """
         try:
+            print(f"  Loading page: {url}")
             self.driver.get(url)
             time.sleep(self.PAGE_LOAD_WAIT_TIME)
             if self.EXPECTED_PAGE_TITLE not in self.driver.title:
                 raise ValueError(
                     f"Page title does not contain '{self.EXPECTED_PAGE_TITLE}'"
                 )
+            print(f"  ✓ Page loaded")
             logger.info(f"Successfully loaded page: {url}")
         except Exception as e:
+            print(f"  ✗ Failed to load page: {e}")
             logger.error(f"Error loading page {url}: {e}")
             raise
 
+    def _table_signature(self):
+        """
+        Cheap fingerprint of the current table body, used to detect a refresh.
+
+        Returns:
+            tuple: (row_count, first_row_text). (0, None) when no table exists.
+        """
+        try:
+            tbody = self.driver.find_element(By.XPATH, "//tbody")
+            rows = tbody.find_elements(By.XPATH, "./tr")
+            if not rows:
+                return (0, None)
+            first_text = rows[0].text.replace("\n", "|")[:160]
+            return (len(rows), first_text)
+        except (NoSuchElementException, StaleElementReferenceException):
+            return (0, None)
+
+    def _wait_for_table_refresh(self, previous_signature, timeout=20):
+        """
+        Wait until the table body differs from ``previous_signature``.
+
+        The page is Angular, so clicking Filter re-renders the table
+        asynchronously. A fixed sleep either wastes time or races the render.
+
+        Returns:
+            bool: True if the table changed, False on timeout.
+        """
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            time.sleep(0.5)
+            if self._table_signature() != previous_signature:
+                return True
+        return False
+
+    def _set_date_input_js(self, date):
+        """Set the date field through the DOM (fallback for headless input quirks)."""
+        date_input = self.driver.find_element(By.XPATH, "//input[@bsdatepicker='']")
+        self.driver.execute_script(
+            "arguments[0].value = arguments[1];"
+            "arguments[0].dispatchEvent(new Event('input', {bubbles: true}));"
+            "arguments[0].dispatchEvent(new Event('change', {bubbles: true}));",
+            date_input,
+            date,
+        )
+
     def change_date(self, date):
         """
-        Change the date filter on the page.
-        
+        Change the date filter on the page and wait for the table to refresh.
+
         Args:
             date: Date string in MM/DD/YYYY format
-        
+
         Raises:
             Exception: If date change fails
         """
         try:
+            previous_signature = self._table_signature()
+
             date_input = self.driver.find_element(
                 By.XPATH, "//input[@bsdatepicker='']"
             )
             filter_button = self.driver.find_element(
                 By.CLASS_NAME, "box__filter--search"
             )
-            date_input.clear()
-            date_input.send_keys(date)
-            filter_button.click()
-            time.sleep(self.DATE_CHANGE_WAIT_TIME)
+
+            try:
+                date_input.clear()
+                date_input.send_keys(date)
+            except (StaleElementReferenceException, WebDriverException) as e:
+                logger.debug(f"send_keys failed ({e}), using JS fallback")
+                self._set_date_input_js(date)
+
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});", filter_button
+            )
+            try:
+                filter_button.click()
+            except (WebDriverException, StaleElementReferenceException):
+                self.driver.execute_script("arguments[0].click();", filter_button)
+
+            if not self._wait_for_table_refresh(previous_signature):
+                print(f"    Table did not refresh for {date}, retrying with JS value set")
+                logger.warning(
+                    f"Table did not refresh after filtering {date}, retrying with JS value set"
+                )
+                self._set_date_input_js(date)
+                filter_button = self.driver.find_element(
+                    By.CLASS_NAME, "box__filter--search"
+                )
+                self.driver.execute_script("arguments[0].click();", filter_button)
+                refreshed = self._wait_for_table_refresh(previous_signature)
+                print(
+                    f"    {'✓ Table refreshed' if refreshed else '✗ Table still unchanged'}"
+                )
+            else:
+                print(f"    ✓ Table refreshed")
+
             logger.debug(f"Changed date to: {date}")
         except NoSuchElementException as e:
+            print(f"    ✗ Date filter element not found: {e}")
             logger.error(f"Element not found while changing date: {e}")
             raise Exception(f"Error while changing the date: {e}")
 
@@ -119,6 +237,342 @@ class NepalStockScraper:
         except NoSuchElementException as e:
             logger.error(f"Table body not found: {e}")
             raise Exception(f"Error while checking content: {e}")
+
+    # ------------------------------------------------------------------
+    # Today's Price table parsing (HTML, no CSV download)
+    # ------------------------------------------------------------------
+
+    # Header text -> model field. Headers are normalised before lookup, so
+    # "Close Price* (Rs)" matches ("close price",).
+    TODAY_PRICE_COLUMNS = {
+        'symbol': ('symbol',),
+        'close_price': ('close price',),
+        'open_price': ('open price',),
+        'high_price': ('high price',),
+        'low_price': ('low price',),
+        'total_traded_quantity': ('total traded quantity',),
+        'total_traded_value': ('total traded value',),
+        'total_trades': ('total trades',),
+        'last_updated_price': ('ltp', 'last updated price', 'last traded price'),
+        'previous_day_close_price': ('previous day close price',),
+        'average_traded_price': ('average traded price',),
+        'fifty_two_weeks_high': ('52 week high',),
+        'fifty_two_weeks_low': ('52 week low',),
+        'market_capitalization': ('marketcapitalization', 'market capitalization'),
+    }
+
+    @staticmethod
+    def _normalize_header(text):
+        """Lowercase, strip units/asterisks/parentheticals, collapse whitespace."""
+        value = (text or '').lower().replace('*', ' ')
+        value = re.sub(r'\(.*?\)', ' ', value)
+        value = re.sub(r'\brs\b\.?', ' ', value)
+        value = re.sub(r'[^a-z0-9]+', ' ', value).strip()
+        return re.sub(r'\s+', ' ', value)
+
+    @classmethod
+    def _map_today_price_headers(cls, headers):
+        """Map field name -> column index using the normalised header row."""
+        normalized = [cls._normalize_header(h) for h in headers]
+        mapping = {}
+        for field, aliases in cls.TODAY_PRICE_COLUMNS.items():
+            for index, header in enumerate(normalized):
+                if header in aliases:
+                    mapping[field] = index
+                    break
+        return mapping
+
+    @staticmethod
+    def _to_number(value):
+        """
+        Convert a table cell to a number.
+
+        Handles thousands separators and the LTP change suffix, e.g.
+        "836.70 (-8.3)" -> 836.7. Returns None for blank/dash cells.
+        """
+        if value is None:
+            return None
+        text = str(value).strip().replace(',', '')
+        if not text or text in ('-', '—', '--'):
+            return None
+        # Drop a trailing "(change)" annotation. Only strip when the text before
+        # the parenthesis still parses, so negative values are not mangled.
+        if '(' in text:
+            candidate = text.split('(')[0].strip()
+            try:
+                return float(candidate)
+            except ValueError:
+                pass
+        try:
+            return float(text)
+        except ValueError:
+            return None
+
+    @classmethod
+    def parse_today_price_html(cls, html_content, selected_date):
+        """
+        Parse the Today's Price table out of raw HTML.
+
+        Kept Selenium-free so it can be unit tested against a saved page.
+
+        Args:
+            html_content: Raw page HTML.
+            selected_date: date object the data belongs to.
+
+        Returns:
+            List of dicts with model-ready field names. Rows without a symbol or
+            a close price are dropped.
+        """
+        soup = BeautifulSoup(html_content, 'html.parser')
+        table = soup.find('table')
+        if table is None:
+            return []
+
+        header_row = table.find('thead')
+        header_cells = (
+            header_row.find_all('th') if header_row else table.find_all('th')
+        )
+        headers = [cell.get_text(' ', strip=True) for cell in header_cells]
+        mapping = cls._map_today_price_headers(headers)
+
+        # Bail out if the header layout is not what we expect; positional guessing
+        # would silently store the wrong column in the wrong field.
+        if 'symbol' not in mapping or 'close_price' not in mapping:
+            logger.warning(f"Unexpected Today's Price headers: {headers}")
+            return []
+
+        body = table.find('tbody')
+        rows = body.find_all('tr') if body else table.find_all('tr')[1:]
+
+        parsed = []
+        for row in rows:
+            cells = row.find_all('td')
+            if not cells:
+                continue
+            values = [cell.get_text(' ', strip=True) for cell in cells]
+
+            def cell(field):
+                index = mapping.get(field)
+                if index is None or index >= len(values):
+                    return None
+                return values[index]
+
+            symbol = (cell('symbol') or '').strip().upper()
+            if not symbol:
+                continue
+
+            close_price = cls._to_number(cell('close_price'))
+            if close_price is None:
+                logger.debug(f"Skipping {symbol}: no close price")
+                continue
+
+            def number_or_zero(field):
+                return cls._to_number(cell(field)) or 0
+
+            parsed.append({
+                'symbol': symbol,
+                'date': selected_date,
+                'close_price': close_price,
+                'open_price': number_or_zero('open_price'),
+                'high_price': number_or_zero('high_price'),
+                'low_price': number_or_zero('low_price'),
+                'total_traded_quantity': int(number_or_zero('total_traded_quantity')),
+                'total_traded_value': number_or_zero('total_traded_value'),
+                'total_trades': int(number_or_zero('total_trades')),
+                'last_updated_price': number_or_zero('last_updated_price'),
+                'previous_day_close_price': number_or_zero('previous_day_close_price'),
+                'average_traded_price': number_or_zero('average_traded_price'),
+                'market_capitalization': cls._to_number(cell('market_capitalization')),
+            })
+
+        return parsed
+
+    def parse_today_price_table(self, selected_date):
+        """Parse the currently rendered Today's Price table."""
+        return self.parse_today_price_html(self.driver.page_source, selected_date)
+
+    def _set_items_per_page(self, size=500):
+        """
+        Raise the table's page size so a normal trading day fits on one page.
+
+        The page defaults to 20 rows over ~18 pages. The filter bar exposes a
+        <select> with 10/20/50/200/300/500 options.
+        """
+        try:
+            from selenium.webdriver.support.ui import Select
+
+            previous_signature = self._table_signature()
+            select_el = self.driver.find_element(By.CSS_SELECTOR, "select")
+            try:
+                Select(select_el).select_by_value(str(size))
+            except Exception:
+                Select(select_el).select_by_visible_text(str(size))
+
+            if not self._wait_for_table_refresh(previous_signature, timeout=10):
+                # Angular may not react to the synthetic change; force it via JS.
+                self.driver.execute_script(
+                    "arguments[0].value = arguments[1];"
+                    "arguments[0].dispatchEvent(new Event('change', {bubbles: true}));",
+                    select_el,
+                    str(size),
+                )
+                self._wait_for_table_refresh(previous_signature, timeout=10)
+
+            print(f"  Setting items per page to {size}...")
+            logger.info(f"Set items per page to {size}")
+        except (NoSuchElementException, StaleElementReferenceException, WebDriverException) as e:
+            print(f"  ⚠ Could not set items per page to {size}: {e}")
+            logger.warning(f"Could not set items per page to {size}: {e}")
+
+    def _go_to_next_page(self):
+        """Click the ngx-pagination 'Next' control. Returns False when exhausted."""
+        try:
+            next_li = self.driver.find_element(
+                By.CSS_SELECTOR, "ul.ngx-pagination li.pagination-next"
+            )
+            if "disabled" in (next_li.get_attribute("class") or ""):
+                return False
+
+            previous_signature = self._table_signature()
+            link = next_li.find_element(By.TAG_NAME, "a")
+            self.driver.execute_script("arguments[0].click();", link)
+            return self._wait_for_table_refresh(previous_signature, timeout=15)
+        except (NoSuchElementException, StaleElementReferenceException):
+            return False
+
+    def scrape_all_today_price_pages(self, selected_date):
+        """
+        Parse every page of the current result set, de-duplicated by symbol.
+
+        With items-per-page raised this is normally a single page; the loop is a
+        safety net for days with more rows than the page size.
+        """
+        rows_by_symbol = {}
+        page = 0
+        for _ in range(50):  # hard stop against a stuck paginator
+            page += 1
+            page_rows = self.parse_today_price_table(selected_date)
+            print(f"    Page {page}: {len(page_rows)} rows")
+            for row in page_rows:
+                rows_by_symbol.setdefault(row['symbol'], row)
+            if not self._go_to_next_page():
+                break
+        print(f"    Total: {len(rows_by_symbol)} unique symbols from {page} page(s)")
+        return list(rows_by_symbol.values())
+
+    @staticmethod
+    def trading_days_between(date_from, date_to):
+        """
+        Return the actual NEPSE trading days in an inclusive date range.
+
+        Uses the shared calendar (Sun-Thu before 2026-04-06, Mon-Fri after), so
+        weekends and holidays do not cost a pointless filter click.
+        """
+        days = []
+        current = date_from
+        while current <= date_to:
+            if is_trading_day(current):
+                days.append(current)
+            current += timedelta(days=1)
+        return days
+
+    def save_today_price_rows(self, rows, selected_date, Stock, StockData):
+        """
+        Persist parsed Today's Price rows for one date.
+
+        Symbols that are not already in the Stock table are skipped: the HTML has
+        no security id and Stock.security_id is unique/non-null, so creating them
+        from this page alone is not safe. They are returned in ``unresolved``.
+
+        Returns:
+            dict: created, skipped, unresolved, errors
+        """
+        from django.db import transaction as db_transaction
+
+        stats = {
+            'created': 0,
+            'skipped': 0,
+            'errors': 0,
+            'unresolved': [],
+            'error_messages': [],
+        }
+        if not rows:
+            print("    No rows to save")
+            return stats
+
+        print(
+            f"    Saving {len(rows)} rows for {selected_date} "
+            f"({len({r['symbol'] for r in rows})} symbols)"
+        )
+
+        symbols = {row['symbol'] for row in rows}
+        stocks_by_symbol = {
+            stock.symbol.upper(): stock
+            for stock in Stock.objects.filter(symbol__in=symbols)
+        }
+
+        objects = []
+        for row in rows:
+            stock = stocks_by_symbol.get(row['symbol'])
+            if stock is None:
+                stats['unresolved'].append(row['symbol'])
+                continue
+            try:
+                objects.append(StockData(
+                    stock=stock,
+                    date=selected_date,
+                    open_price=row['open_price'],
+                    high_price=row['high_price'],
+                    low_price=row['low_price'],
+                    close_price=row['close_price'],
+                    total_traded_quantity=row['total_traded_quantity'],
+                    total_traded_value=row['total_traded_value'],
+                    previous_day_close_price=row['previous_day_close_price'],
+                    last_updated_price=row['last_updated_price'],
+                    total_trades=row['total_trades'],
+                    average_traded_price=row['average_traded_price'],
+                    market_capitalization=row['market_capitalization'],
+                ))
+            except (TypeError, ValueError) as e:
+                stats['errors'] += 1
+                stats['error_messages'].append(f"{row['symbol']}: {e}")
+
+        if objects:
+            existing_stock_ids = set(
+                StockData.objects.filter(
+                    stock_id__in=[obj.stock_id for obj in objects],
+                    date=selected_date,
+                ).values_list('stock_id', flat=True)
+            )
+            new_objects = [
+                obj for obj in objects if obj.stock_id not in existing_stock_ids
+            ]
+            stats['skipped'] = len(objects) - len(new_objects)
+
+            if new_objects:
+                try:
+                    with db_transaction.atomic():
+                        StockData.objects.bulk_create(
+                            new_objects, ignore_conflicts=True, batch_size=500
+                        )
+                    stats['created'] = len(new_objects)
+                except Exception as e:
+                    print(f"    ✗ Bulk insert failed: {e}")
+                    logger.error(f"Bulk insert failed for {selected_date}: {e}")
+                    stats['errors'] += len(new_objects)
+                    stats['error_messages'].append(str(e))
+
+        stats['unresolved'] = sorted(set(stats['unresolved']))
+        print(
+            f"    Saved: {stats['created']} new, {stats['skipped']} already existed, "
+            f"{stats['errors']} errors"
+        )
+        if stats['unresolved']:
+            print(
+                f"    Skipped {len(stats['unresolved'])} unknown symbol(s): "
+                f"{', '.join(stats['unresolved'])}"
+            )
+        return stats
 
     def download_wait(self):
         """
@@ -206,18 +660,155 @@ class NepalStockScraper:
             logger.error(f"Error while looping through dates: {e}")
             raise
 
-    def loop_through_date_range(self, Stock, StockData, date_from, date_to):
+    def loop_through_date_range(
+        self, Stock, StockData, date_from, date_to, save_to_db=True
+    ):
         """
-        Loop through a date range and download stock data, skipping dates that already have data.
-        
+        Loop through a date range, filter each date, and scrape the table directly.
+
+        Non-trading days are skipped using the shared NEPSE calendar, and the CSV
+        download path is no longer used (see the commented block below).
+
         Args:
             Stock: Stock model class
             StockData: StockData model class
             date_from: Start date (date object)
             date_to: End date (date object)
-        
+            save_to_db: Persist parsed rows to the database (default: True)
+
         Returns:
             dict: Statistics about the operation
+        """
+        stats = {
+            # Keys the frontend reads
+            'total_dates': 0,
+            'dates_processed': 0,
+            'dates_skipped': 0,
+            'dates_failed': 0,
+            'stocks_created': 0,
+            'stocks_updated': 0,
+            # Extra detail
+            'trading_days': 0,
+            'rows_parsed': 0,
+            'rows_created': 0,
+            'rows_skipped': 0,
+            'unresolved_symbols': [],
+            'error_messages': [],
+        }
+
+        try:
+            if isinstance(date_from, datetime):
+                date_from_obj = date_from.date()
+            else:
+                date_from_obj = date_from
+
+            if isinstance(date_to, datetime):
+                date_to_obj = date_to.date()
+            else:
+                date_to_obj = date_to
+
+            total_days = (date_to_obj - date_from_obj).days + 1
+            trading_days = self.trading_days_between(date_from_obj, date_to_obj)
+
+            stats['total_dates'] = total_days
+            stats['trading_days'] = len(trading_days)
+            stats['dates_skipped'] = total_days - len(trading_days)
+
+            print("=" * 60)
+            print(
+                f"Starting fetch: {date_from_obj} to {date_to_obj} "
+                f"({total_days} calendar days, {len(trading_days)} trading days)"
+            )
+            print("=" * 60)
+            logger.info(
+                f"Starting data fetch from {date_from_obj} to {date_to_obj} "
+                f"({total_days} days, {len(trading_days)} trading days)"
+            )
+
+            unresolved = set()
+
+            # One page rather than 18. Done once; changing the date keeps it.
+            self._set_items_per_page(500)
+
+            for index, date_obj in enumerate(trading_days, 1):
+                date_str = date_obj.strftime(NEPAL_STOCK_DATE_FORMAT)
+                print(f"\n  Date {index}/{len(trading_days)}: {date_str}")
+                logger.info(
+                    f"[{index}/{len(trading_days)}] Processing data for date: {date_str}"
+                )
+
+                try:
+                    self.change_date(date_str)
+                    rows = self.scrape_all_today_price_pages(date_obj)
+
+                    if not rows:
+                        print(f"    ✗ No rows returned")
+                        logger.warning(f"No rows found for date {date_str}")
+                        stats['dates_failed'] += 1
+                        continue
+
+                    if save_to_db:
+                        save_stats = self.save_today_price_rows(
+                            rows, date_obj, Stock, StockData
+                        )
+                        stats['rows_created'] += save_stats['created']
+                        stats['rows_skipped'] += save_stats['skipped']
+                        if save_stats['errors']:
+                            stats['error_messages'].extend(
+                                save_stats['error_messages']
+                            )
+                        unresolved.update(save_stats['unresolved'])
+
+                    stats['rows_parsed'] += len(rows)
+                    stats['dates_processed'] += 1
+                    print(f"    ✓ Parsed {len(rows)} rows")
+                    logger.info(
+                        f"Processed {date_str}: {len(rows)} rows parsed"
+                    )
+
+                except Exception as e:
+                    print(f"    ✗ Error: {e}")
+                    logger.error(f"Error processing date {date_str}: {e}")
+                    stats['dates_failed'] += 1
+                    stats['error_messages'].append(f"{date_str}: {e}")
+
+            stats['unresolved_symbols'] = sorted(unresolved)
+
+            print("\n" + "=" * 60)
+            print("Fetch complete")
+            print(f"  Dates processed : {stats['dates_processed']}")
+            print(f"  Dates skipped   : {stats['dates_skipped']} (non-trading days)")
+            print(f"  Dates failed    : {stats['dates_failed']}")
+            print(f"  Rows parsed     : {stats['rows_parsed']}")
+            if save_to_db:
+                print(f"  Rows created    : {stats['rows_created']}")
+                print(f"  Rows skipped    : {stats['rows_skipped']} (already existed)")
+                print(f"  Unknown symbols : {len(stats['unresolved_symbols'])}")
+                if stats['unresolved_symbols']:
+                    print(f"    {', '.join(stats['unresolved_symbols'])}")
+            else:
+                print("  Saving          : disabled (save_to_db=false)")
+            print("=" * 60)
+            logger.info(
+                f"Completed date range processing. "
+                f"Processed: {stats['dates_processed']}, "
+                f"Skipped: {stats['dates_skipped']}, "
+                f"Failed: {stats['dates_failed']}, "
+                f"Rows created: {stats['rows_created']}"
+            )
+            return stats
+        except Exception as e:
+            print(f"✗ Fetch failed: {e}")
+            logger.error(f"Error while looping through date range: {e}")
+            raise
+
+    def _loop_through_date_range_csv(self, Stock, StockData, date_from, date_to):
+        """
+        Legacy CSV-download implementation, kept for reference only.
+
+        Superseded by the table scraper above: headless Chrome downloads are
+        unreliable, and the rendered table already contains everything we need.
+        Run by switching loop_through_date_range back to this method.
         """
         stats = {
             'total_dates': 0,
@@ -227,81 +818,50 @@ class NepalStockScraper:
             'stocks_created': 0,
             'stocks_updated': 0,
         }
-        
-        try:
-            # Ensure we have date objects
-            if isinstance(date_from, datetime):
-                date_from_obj = date_from.date()
-            else:
-                date_from_obj = date_from
-            
-            if isinstance(date_to, datetime):
-                date_to_obj = date_to.date()
-                current_date = date_to
-            else:
-                date_to_obj = date_to
-                current_date = datetime.combine(date_to_obj, datetime.min.time())
-            
-            # Calculate total dates in range
-            total_days = (date_to_obj - date_from_obj).days + 1
-            stats['total_dates'] = total_days
-            
-            logger.info(
-                f"Starting data fetch from {date_from_obj} to {date_to_obj} "
-                f"({total_days} days)"
-            )
-            
-            # Note: We no longer skip entire dates - bulk insert will handle skipping individual records
-            # This allows filling in missing records for dates that have partial data
-            logger.info("Processing all dates - bulk insert will skip existing stock+date combinations")
 
-            while current_date.date() >= date_from_obj:
-                date_str = current_date.strftime(NEPAL_STOCK_DATE_FORMAT)
-                date_obj = current_date.date()
-                
-                # Optional: Check if date has complete data (all stocks) - can still process to fill gaps
-                # For now, we process all dates and let bulk insert handle skipping
-                
-                logger.info(f"Processing data for date: {date_str}")
-                try:
-                    self.change_date(date_str)
-                    if self.check_content():
-                        logger.info("Content found. Attempting to download CSV.")
-                        self.download_csv()
-                        if self.download_wait() >= 0:
-                            downloaded_files = os.listdir(self.temp_dir)
-                            if downloaded_files:
-                                latest_file = self.get_latest_file()
-                                save_stats = self.save_to_database(
-                                    latest_file, Stock, StockData
-                                )
-                                stats['stocks_created'] += save_stats.get('created', 0)
-                                stats['stocks_updated'] += save_stats.get('updated', 0)
-                                os.remove(latest_file)
-                                stats['dates_processed'] += 1
-                                logger.info(f"Successfully processed date: {date_str}")
-                            else:
-                                logger.warning(f"No files found for date {date_str}.")
-                                stats['dates_failed'] += 1
-                    else:
-                        logger.warning(f"No content available for date: {date_str}.")
-                        stats['dates_failed'] += 1
-                except Exception as e:
-                    logger.error(f"Error processing date {date_str}: {e}")
+        if isinstance(date_from, datetime):
+            date_from_obj = date_from.date()
+        else:
+            date_from_obj = date_from
+
+        if isinstance(date_to, datetime):
+            date_to_obj = date_to.date()
+            current_date = date_to
+        else:
+            date_to_obj = date_to
+            current_date = datetime.combine(date_to_obj, datetime.min.time())
+
+        total_days = (date_to_obj - date_from_obj).days + 1
+        stats['total_dates'] = total_days
+
+        while current_date.date() >= date_from_obj:
+            date_str = current_date.strftime(NEPAL_STOCK_DATE_FORMAT)
+            try:
+                self.change_date(date_str)
+                if self.check_content():
+                    self.download_csv()
+                    if self.download_wait() >= 0:
+                        downloaded_files = os.listdir(self.temp_dir)
+                        if downloaded_files:
+                            latest_file = self.get_latest_file()
+                            save_stats = self.save_to_database(
+                                latest_file, Stock, StockData
+                            )
+                            stats['stocks_created'] += save_stats.get('created', 0)
+                            stats['stocks_updated'] += save_stats.get('updated', 0)
+                            os.remove(latest_file)
+                            stats['dates_processed'] += 1
+                        else:
+                            stats['dates_failed'] += 1
+                else:
                     stats['dates_failed'] += 1
-                
-                current_date -= timedelta(days=1)
+            except Exception as e:
+                logger.error(f"Error processing date {date_str}: {e}")
+                stats['dates_failed'] += 1
 
-            logger.info(
-                f"Completed date range processing. "
-                f"Processed: {stats['dates_processed']}, "
-                f"Skipped: {stats['dates_skipped']}, "
-                f"Failed: {stats['dates_failed']}"
-            )
-            return stats
-        except Exception as e:
-            logger.error(f"Error while looping through date range: {e}")
-            raise
+            current_date -= timedelta(days=1)
+
+        return stats
 
     def save_to_database(self, file_path, Stock, StockData):
         """
@@ -682,6 +1242,8 @@ class NepalStockScraper:
             if self.driver:
                 self.driver.quit()
                 self.driver = None
+                print("  ✓ Browser closed")
                 logger.info("WebDriver closed successfully")
         except Exception as e:
+            print(f"  ⚠ Error closing the browser: {e}")
             logger.error(f"Error closing the driver: {e}")

@@ -186,6 +186,14 @@ class LoadStockDataView(APIView):
             )
         
         scraper = None
+        save_to_db = request.data.get("save_to_db", True)
+        if isinstance(save_to_db, str):
+            save_to_db = save_to_db.strip().lower() not in ("false", "0", "no", "")
+
+        headless = request.data.get("headless", True)
+        if isinstance(headless, str):
+            headless = headless.strip().lower() not in ("false", "0", "no", "")
+
         stats = {
             'total_dates': 0,
             'dates_processed': 0,
@@ -193,6 +201,12 @@ class LoadStockDataView(APIView):
             'dates_failed': 0,
             'stocks_created': 0,
             'stocks_updated': 0,
+            'trading_days': 0,
+            'rows_parsed': 0,
+            'rows_created': 0,
+            'rows_skipped': 0,
+            'unresolved_symbols': [],
+            'error_messages': [],
         }
 
         try:
@@ -232,10 +246,14 @@ class LoadStockDataView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            scraper = NepalStockScraper()
+            scraper = NepalStockScraper(headless=bool(headless))
+            print(
+                f"Fetch request: {date_from} to {date_to} "
+                f"(headless={bool(headless)}, save_to_db={bool(save_to_db)})"
+            )
             scraper.load_page(NEPAL_STOCK_BASE_URL)
             stats = scraper.loop_through_date_range(
-                Stock, StockData, date_from, date_to
+                Stock, StockData, date_from, date_to, save_to_db=bool(save_to_db)
             )
             
             logger.info(
@@ -250,7 +268,8 @@ class LoadStockDataView(APIView):
                     "message": "Data loading completed",
                     "date_from": str(date_from),
                     "date_to": str(date_to),
-                    "statistics": stats
+                    "statistics": stats,
+                    "unresolved_symbols": stats.get("unresolved_symbols", []),
                 },
                 status=status.HTTP_200_OK
             )
