@@ -537,7 +537,35 @@ class NepalstockFloorsheetScraper:
         
         logger.warning(f"Could not parse date: {date_str}")
         return None
-    
+
+    @staticmethod
+    def _date_from_contract(transaction_no: Optional[int]) -> Optional[datetime]:
+        """
+        Extract the trade date embedded in a NEPSE contract number.
+
+        Contract numbers look like ``YYYYMMDD`` + market code + serial, e.g.
+        ``2026110505013245`` was traded on 2026-11-05. The floorsheet table has no
+        date column, so this prefix is the only authoritative per-row date.
+
+        Using this instead of ``date.today()`` matters because the daily floorsheet
+        is published a trading day late: a run before publication returns the
+        previous session's contracts, and stamping them with today's date silently
+        shifts the whole dataset forward by one trading day.
+
+        Returns:
+            Parsed datetime at midnight, or None when the prefix is not a date.
+        """
+        if not transaction_no:
+            return None
+        text = str(transaction_no)
+        if len(text) < 8:
+            return None
+        try:
+            return datetime.strptime(text[:8], '%Y%m%d')
+        except ValueError:
+            return None
+
+
     @staticmethod
     def _parse_number(value: str) -> Optional[int]:
         """
@@ -812,9 +840,10 @@ class NepalstockFloorsheetScraper:
                     if symbol:
                         metadata['symbols_found'].add(symbol)
                 
-                # Use today's date for all transactions (table doesn't have date column)
-                trans_date = datetime.combine(date.today(), datetime.min.time())
-                
+                # The table has no date column, so derive the trade date from the
+                # contract number. Falling back to date.today() would mislabel the
+                # previous session's rows whenever the run happens before the
+                # current day's floorsheet is published.
                 contract_str = cell_texts[contract_idx]
                 buyer_str = cell_texts[buyer_idx]
                 seller_str = cell_texts[seller_idx]
@@ -822,8 +851,15 @@ class NepalstockFloorsheetScraper:
                 rate_str = cell_texts[rate_idx]
                 amount_str = cell_texts[amount_idx]
                 
-                # Parse values (date is already set to today)
+                # Parse values
                 transaction_no = cls._parse_number(contract_str)
+                trans_date = cls._date_from_contract(transaction_no)
+                if trans_date is None:
+                    trans_date = datetime.combine(date.today(), datetime.min.time())
+                    logger.warning(
+                        f"Could not derive trade date from contract '{contract_str}', "
+                        f"falling back to today ({date.today()})"
+                    )
                 buyer_broker = cls._parse_number(buyer_str) if buyer_str and buyer_str.strip() != '-' else None
                 seller_broker = cls._parse_number(seller_str) if seller_str and seller_str.strip() != '-' else None
                 quantity = cls._parse_number(qty_str)
