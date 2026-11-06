@@ -9,14 +9,23 @@ Similar to utils.py NepalStockScraper, this uses Selenium for pages that
 require JavaScript interaction (clicking the floorsheet tab).
 """
 import logging
+import os
+import re
+import shutil
+import stat
+import subprocess
 import time
-from datetime import datetime
+import urllib.request
+import zipfile
+from datetime import datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -26,7 +35,149 @@ from selenium.common.exceptions import (
     TimeoutException
 )
 
+from .nepse_calendar import is_trading_day, today_or_clamp
+
 logger = logging.getLogger(__name__)
+
+# Chrome updates itself automatically, which regularly leaves the installed
+# ChromeDriver on a different major version and makes every scrape die with
+# "session not created: This version of ChromeDriver only supports Chrome
+# version X". These helpers detect that and fetch a matching driver instead.
+CHROME_BINARY_CANDIDATES = (
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+    "/opt/google/chrome/chrome",
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+)
+CHROMEDRIVER_CACHE_DIR = Path.home() / ".cache" / "selenium" / "chromedriver"
+CHROMEDRIVER_CFT_URL = (
+    "https://storage.googleapis.com/chrome-for-testing-public/"
+    "{version}/linux64/chromedriver-linux64.zip"
+)
+
+
+def _binary_version(executable: str) -> Optional[str]:
+    """Return the full x.y.z.w version reported by a Chrome/ChromeDriver binary."""
+    try:
+        output = subprocess.run(
+            [executable, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+    match = re.search(r"(\d+\.\d+\.\d+\.\d+)", output)
+    return match.group(1) if match else None
+
+
+def _major_version(version: Optional[str]) -> Optional[int]:
+    """Extract just the major component of a version string."""
+    if not version:
+        return None
+    match = re.match(r"(\d+)", version)
+    return int(match.group(1)) if match else None
+
+
+def _find_chrome_binary() -> Optional[str]:
+    """Locate the installed Chrome/Chromium binary, honouring env overrides."""
+    override = os.environ.get("CHROME_BINARY_PATH")
+    if override and Path(override).exists():
+        return override
+
+    for candidate in CHROME_BINARY_CANDIDATES:
+        if Path(candidate).exists():
+            return candidate
+    return None
+
+
+def _download_chromedriver(version: str) -> Optional[str]:
+    """
+    Download the ChromeDriver matching `version` into the local cache.
+
+    Returns the path to the executable, or None if it could not be fetched.
+    """
+    target_dir = CHROMEDRIVER_CACHE_DIR / version
+    executable = target_dir / "chromedriver"
+
+    if executable.exists():
+        return str(executable)
+
+    url = CHROMEDRIVER_CFT_URL.format(version=version)
+    archive = target_dir / "chromedriver.zip"
+
+    try:
+        target_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"ChromeDriver version mismatch - downloading matching driver {version}")
+        urllib.request.urlretrieve(url, archive)
+
+        with zipfile.ZipFile(archive) as zf:
+            member = next(
+                name for name in zf.namelist()
+                if name.endswith("/chromedriver") and not name.endswith("/")
+            )
+            with zf.open(member) as src, open(executable, "wb") as dst:
+                shutil.copyfileobj(src, dst)
+
+        archive.unlink(missing_ok=True)
+        executable.chmod(executable.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        logger.info(f"Installed matching ChromeDriver {version} to {executable}")
+        return str(executable)
+
+    except Exception as e:
+        logger.warning(f"Could not download ChromeDriver {version}: {e}")
+        shutil.rmtree(target_dir, ignore_errors=True)
+        return None
+
+
+def _resolve_chrome_service() -> Optional[ChromeService]:
+    """
+    Return a ChromeService pointing at a driver matching the installed Chrome.
+
+    Returns None when the driver already on PATH is compatible, so Selenium
+    keeps using its normal resolution. Raises RuntimeError with actionable
+    instructions when the versions mismatch and no repair is possible.
+    """
+    override = os.environ.get("CHROMEDRIVER_PATH")
+    if override:
+        if not Path(override).exists():
+            raise RuntimeError(f"CHROMEDRIVER_PATH points to a missing file: {override}")
+        logger.info(f"Using ChromeDriver from CHROMEDRIVER_PATH: {override}")
+        return ChromeService(executable_path=override)
+
+    chrome_binary = _find_chrome_binary()
+    if not chrome_binary:
+        logger.warning("Could not locate a Chrome binary, deferring to Selenium's own resolution")
+        return None
+
+    chrome_version = _binary_version(chrome_binary)
+    driver_on_path = shutil.which("chromedriver")
+    driver_version = _binary_version(driver_on_path) if driver_on_path else None
+
+    chrome_major = _major_version(chrome_version)
+    driver_major = _major_version(driver_version)
+
+    if chrome_major is None or driver_major is None or chrome_major == driver_major:
+        logger.info(f"ChromeDriver {driver_version} matches Chrome {chrome_version}")
+        return None
+
+    logger.warning(
+        f"Version mismatch: Chrome {chrome_version} but ChromeDriver {driver_version}"
+    )
+
+    downloaded = _download_chromedriver(chrome_version)
+    if downloaded:
+        return ChromeService(executable_path=downloaded)
+
+    raise RuntimeError(
+        f"ChromeDriver {driver_version} is incompatible with Chrome {chrome_version}.\n"
+        f"Fix it with one of:\n"
+        f"  export CHROMEDRIVER_PATH=/path/to/chromedriver-{chrome_version}\n"
+        f"  curl -L -o chromedriver.zip {CHROMEDRIVER_CFT_URL.format(version=chrome_version)}\n"
+        f"or install a matching driver with: sudo apt-get install -y chromium-driver"
+    )
 
 
 @dataclass
@@ -111,7 +262,10 @@ class MerolaganiFloorsheetScraper:
                 "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             )
             
-            self.driver = webdriver.Chrome(options=chrome_options)
+            self.driver = webdriver.Chrome(
+                service=_resolve_chrome_service(),
+                options=chrome_options,
+            )
             
             # Set shorter implicit wait (we use explicit waits where needed)
             self.driver.implicitly_wait(3)
@@ -1572,13 +1726,21 @@ class MerolaganiFloorsheetScraper:
             if date_from and date_to:
                 # Loop through each date in the range (weekends are automatically skipped)
                 dates_to_scrape = self._get_dates_in_range(date_from, date_to, skip_weekends=True)
-                total_dates_in_range = (datetime.strptime(date_to, '%m/%d/%Y') - datetime.strptime(date_from, '%m/%d/%Y')).days + 1
+                # Count against the clamped end so the skipped figure reflects weekends
+                # only, not dates dropped because they were in the future.
+                effective_to = today_or_clamp(datetime.strptime(date_to, '%m/%d/%Y').date())
+                total_dates_in_range = (effective_to - datetime.strptime(date_from, '%m/%d/%Y').date()).days + 1
                 weekend_count = total_dates_in_range - len(dates_to_scrape)
-                
+                clamped = effective_to != datetime.strptime(date_to, '%m/%d/%Y').date()
+
+                range_note = f"{date_from} to {effective_to.strftime('%m/%d/%Y')}"
+                if clamped:
+                    range_note += f" (date_to {date_to} clamped to today)"
+
                 if weekend_count > 0:
-                    print(f"  Date range: {len(dates_to_scrape)} business days ({date_from} to {date_to}, {weekend_count} weekend days skipped)")
+                    print(f"  Date range: {len(dates_to_scrape)} business days ({range_note}, {weekend_count} weekend days skipped)")
                 else:
-                    print(f"  Date range: {len(dates_to_scrape)} dates ({date_from} to {date_to})")
+                    print(f"  Date range: {len(dates_to_scrape)} dates ({range_note})")
                 
                 for i, date_str in enumerate(dates_to_scrape, 1):
                     # Convert date to check against existing dates (YYYY-MM-DD format)
@@ -1735,57 +1897,68 @@ class MerolaganiFloorsheetScraper:
     def _get_dates_in_range(self, date_from: str, date_to: str, skip_weekends: bool = True) -> List[str]:
         """
         Generate list of dates between date_from and date_to (inclusive).
-        
-        Skips weekends (Friday and Saturday) as the stock market is closed on those days.
-        
+
+        Skips weekends according to the NEPSE trading calendar, which is not fixed:
+
+        - Before 2026-04-06 the market traded Sun-Thu, closed Fri and Sat.
+        - From 2026-04-06 the market trades Mon-Fri, closed Sat and Sun.
+
+        See stock_data/nepse_calendar.py. Nepali public holidays are not modeled, so
+        those dates still make a pointless round trip and come back empty.
+
+        A date_to in the future is clamped to today, since every date after today is
+        guaranteed to return no data.
+
         Args:
             date_from: Start date in MM/DD/YYYY format
             date_to: End date in MM/DD/YYYY format
-            skip_weekends: If True, skip Friday (weekday 4) and Saturday (weekday 5) (default: True)
-            
+            skip_weekends: If True, skip non-trading weekend days (default: True)
+
         Returns:
             List of date strings in MM/DD/YYYY format (excluding weekends if skip_weekends=True)
         """
-        from datetime import timedelta
-        
         dates = []
         skipped_weekends = 0
         try:
             start = datetime.strptime(date_from, '%m/%d/%Y')
             end = datetime.strptime(date_to, '%m/%d/%Y')
-            
+            # Keep everything a datetime so it compares against `current` below.
+            clamped_end = datetime.combine(today_or_clamp(end.date()), datetime.min.time())
+            if clamped_end != end:
+                print(
+                    f"  Note: date_to {date_to} is in the future, clamping to "
+                    f"{clamped_end.strftime('%m/%d/%Y')}"
+                )
+                logger.warning(
+                    f"date_to {date_to} is in the future, clamping to {clamped_end.date()}"
+                )
+
             current = start
-            while current <= end:
-                # Skip weekends (Friday=4, Saturday=5) if skip_weekends is True
-                if skip_weekends:
-                    weekday = current.weekday()  # Monday=0, Sunday=6
-                    if weekday == 4:  # Friday
-                        skipped_weekends += 1
-                        logger.debug(f"Skipping Friday: {current.strftime('%m/%d/%Y')}")
-                        current += timedelta(days=1)
-                        continue
-                    elif weekday == 5:  # Saturday
-                        skipped_weekends += 1
-                        logger.debug(f"Skipping Saturday: {current.strftime('%m/%d/%Y')}")
-                        current += timedelta(days=1)
-                        continue
-                
+            while current <= clamped_end:
+                if skip_weekends and not is_trading_day(current.date()):
+                    skipped_weekends += 1
+                    logger.debug(
+                        f"Skipping {current.strftime('%A')}: {current.strftime('%m/%d/%Y')}"
+                    )
+                    current += timedelta(days=1)
+                    continue
+
                 dates.append(current.strftime('%m/%d/%Y'))
                 current += timedelta(days=1)
         except ValueError as e:
             logger.warning(f"Error parsing dates: {e}")
-            # Return just the end date as fallback (if not a weekend)
+            # Return just the end date as fallback (if it is a trading day)
             if date_to:
                 try:
                     end_date = datetime.strptime(date_to, '%m/%d/%Y')
-                    if not skip_weekends or end_date.weekday() not in [4, 5]:
+                    if not skip_weekends or is_trading_day(end_date.date()):
                         dates.append(date_to)
                 except ValueError:
                     dates.append(date_to)
-        
+
         if skipped_weekends > 0:
-            logger.info(f"Skipped {skipped_weekends} weekend days (Friday/Saturday)")
-        
+            logger.info(f"Skipped {skipped_weekends} weekend days")
+
         return dates
     
     def _filter_by_date_range(
