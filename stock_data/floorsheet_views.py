@@ -9,7 +9,7 @@ Provides endpoints to:
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from django.db.models import Sum, Count, Avg, F, Q
+from django.db.models import Sum, Count, Avg, Max, F, Q
 from django.db.models.functions import TruncDate
 from rest_framework import status
 from rest_framework.views import APIView
@@ -23,6 +23,7 @@ from .floorsheet_scraper import (
     save_floorsheet_to_db
 )
 from .nepalstock_floorsheet_scraper import NepalstockFloorsheetScraper
+from .broker_holdings import compute_broker_holdings
 
 
 class FloorsheetUploadView(APIView):
@@ -830,3 +831,136 @@ class BrokerActivityView(APIView):
             },
             'positions': sorted_positions
         })
+
+
+class BrokerHoldingsView(APIView):
+    """
+    Per-broker bought / sold / net holdings for one stock over a date range.
+
+    GET /api/stock-data/floorsheet/broker-holdings/?symbol=KKHC&start_date=&end_date=
+
+    Query Parameters:
+        - symbol: Stock symbol (required)
+        - start_date: Range start, YYYY-MM-DD (default: 30 days before latest data)
+        - end_date: Range end, YYYY-MM-DD (default: latest date with floorsheet data)
+        - lookback_days: Cap how far back the carry-forward baseline reaches.
+          0 (default) uses all available history before start_date.
+        - exclude_self_trades: Exclude trades where buyer == seller (default: true)
+        - min_net_qty: Drop brokers whose absolute net is below this (default: 0)
+        - sort_by: net | bought | sold | broker (default: net)
+        - limit: Max brokers returned (default: 50)
+
+    Range analytics (bought / sold / net) are exact for the selected range. The
+    carry-forward holdings figure is an estimate that needs floorsheet rows from
+    before start_date; where those are missing, `estimated_holding_qty` is null and
+    `holdings_reliability` is reported as `none` rather than returning a number
+    that looks authoritative but is not.
+    """
+    permission_classes = [AllowAny]
+
+    DATE_FORMAT = '%Y-%m-%d'
+    DEFAULT_RANGE_DAYS = 30
+
+    def _parse_date(self, value, field):
+        """Parse a YYYY-MM-DD query param, or return None when absent/invalid."""
+        if not value:
+            return None
+        try:
+            return datetime.strptime(value, self.DATE_FORMAT).date()
+        except ValueError:
+            return None
+
+    def get(self, request):
+        symbol = request.query_params.get('symbol')
+        if not symbol:
+            return Response(
+                {'error': 'symbol query parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            stock = Stock.objects.get(symbol=symbol.upper())
+        except Stock.DoesNotExist:
+            return Response(
+                {'error': f"Stock with symbol '{symbol}' not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        for field in ('start_date', 'end_date'):
+            raw = request.query_params.get(field)
+            if raw and self._parse_date(raw, field) is None:
+                return Response(
+                    {'error': f'Invalid {field} format. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        start_date = self._parse_date(request.query_params.get('start_date'), 'start_date')
+        end_date = self._parse_date(request.query_params.get('end_date'), 'end_date')
+
+        # Default to the stock's own latest available data rather than today.
+        # Floorsheet data lags well behind the current date, so defaulting to
+        # "today" would render an empty page for most symbols.
+        if end_date is None:
+            end_date = (
+                FloorsheetData.objects.filter(stock=stock)
+                .aggregate(latest=Max('transaction_date'))['latest']
+            )
+            if end_date is None:
+                return Response({
+                    'symbol': stock.symbol,
+                    'security_name': stock.security_name,
+                    'message': 'No floorsheet data found for this stock',
+                    'brokers': [],
+                })
+        if start_date is None:
+            start_date = end_date - timedelta(days=self.DEFAULT_RANGE_DAYS)
+
+        if start_date > end_date:
+            return Response(
+                {'error': 'start_date must be on or before end_date'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            lookback_days = int(request.query_params.get('lookback_days', 0))
+        except ValueError:
+            lookback_days = 0
+        try:
+            min_net_qty = int(request.query_params.get('min_net_qty', 0))
+        except ValueError:
+            min_net_qty = 0
+        try:
+            limit = int(request.query_params.get('limit', 50))
+        except ValueError:
+            limit = 50
+
+        exclude_self_trades = request.query_params.get(
+            'exclude_self_trades', 'true'
+        ).lower() not in ('false', '0', 'no')
+
+        result = compute_broker_holdings(
+            stock=stock,
+            start_date=start_date,
+            end_date=end_date,
+            lookback_days=lookback_days,
+            exclude_self_trades=exclude_self_trades,
+            min_net_qty=min_net_qty,
+            sort_by=request.query_params.get('sort_by', 'net'),
+            limit=max(1, min(limit, 500)),
+        )
+
+        # JSON-safe dates
+        result['date_range']['start'] = start_date.isoformat()
+        result['date_range']['end'] = end_date.isoformat()
+        if result['baseline']['first_data_date']:
+            result['baseline']['first_data_date'] = result['baseline']['first_data_date'].isoformat()
+        result['coverage']['missing_days'] = [
+            d.isoformat() for d in result['coverage']['missing_days']
+        ]
+        for record in result['brokers']:
+            record['daily_net'] = [
+                {'date': point['date'].isoformat(), 'net_qty': point['net_qty']}
+                for point in record['daily_net']
+            ]
+
+        return Response(result)

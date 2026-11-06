@@ -2335,6 +2335,168 @@ GET /api/stock-data/floorsheet/broker/?broker=57&symbol=MBJC
 
 ---
 
+### 6. Broker Holdings by Stock
+
+Per-broker bought / sold / net quantities for a single stock over a date range, plus an
+optional carry-forward position estimate.
+
+```
+GET /api/stock-data/floorsheet/broker-holdings/
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `symbol` | string | *required* | Stock symbol, case-insensitive |
+| `start_date` | date | 30 days before `end_date` | Range start, `YYYY-MM-DD` |
+| `end_date` | date | Symbol's latest date with floorsheet data | Range end, `YYYY-MM-DD` |
+| `lookback_days` | integer | `0` | Cap how far back the carry-forward baseline reaches. `0` = use all available history |
+| `exclude_self_trades` | boolean | `true` | Exclude trades where buyer == seller |
+| `min_net_qty` | integer | `0` | Drop brokers whose absolute net is below this |
+| `sort_by` | string | `net` | One of `net`, `bought`, `sold`, `broker` |
+| `limit` | integer | `50` | Max brokers returned (capped at 500) |
+
+> **Default date range note:** `end_date` deliberately resolves to the symbol's latest
+> *available* floorsheet date rather than today. Floorsheet data lags well behind the
+> current date, so a "last 30 days" default would render an empty page for most symbols.
+
+**Example Request:**
+```bash
+curl "http://127.0.0.1:8000/api/stock-data/floorsheet/broker-holdings/?symbol=KKHC&start_date=2026-02-03&end_date=2026-02-05"
+```
+
+**Example Response:**
+```json
+{
+  "symbol": "KKHC",
+  "security_name": "Khanikhola Hydropower Co. Ltd.",
+  "stock_type": "stock",
+  "date_range": {
+    "start": "2026-02-03",
+    "end": "2026-02-05",
+    "trading_days_expected": 3,
+    "trading_days_with_data": 3
+  },
+  "baseline": {
+    "requested_lookback_days": 0,
+    "available_days": 0,
+    "first_data_date": null,
+    "is_continuous": false,
+    "reliability": "none"
+  },
+  "coverage": {
+    "trading_days_expected": 3,
+    "trading_days_with_data": 3,
+    "coverage_pct": 100.0,
+    "missing_days": [],
+    "warnings": [
+      "No floorsheet history exists before the start of this range, so a carry-forward holdings estimate cannot be computed. Only in-range buy/sell activity is shown."
+    ]
+  },
+  "summary": {
+    "total_bought_qty": 723166,
+    "total_sold_qty": 723166,
+    "total_bought_amount": 174761243.9,
+    "total_sold_amount": 174761243.9,
+    "net_qty": 0,
+    "net_amount": 0.0,
+    "brokers_matched": 82,
+    "brokers_reported": 50,
+    "unique_buyers": 72,
+    "unique_sellers": 77,
+    "total_trades": 1794,
+    "self_trade_qty_pct": 2.02,
+    "self_trades_excluded": true,
+    "top_accumulator": { "broker": 46, "net_qty": 139611 },
+    "top_distributor": { "broker": 34, "net_qty": -92150 },
+    "concentration": { "hhi": 686.88, "interpretation": "Competitive/Distributed" }
+  },
+  "brokers": [
+    {
+      "broker": 46,
+      "bought_qty": 140300,
+      "bought_amount": 35240463.8,
+      "buy_count": 179,
+      "avg_buy_rate": 250.73,
+      "sold_qty": 689,
+      "sold_amount": 164900.0,
+      "sell_count": 9,
+      "avg_sell_rate": 238.36,
+      "net_qty": 139611,
+      "net_amount": 35075563.8,
+      "position": "ACCUMULATING",
+      "baseline_qty": null,
+      "estimated_holding_qty": null,
+      "holdings_reliability": "none",
+      "share_pct": 18.66,
+      "daily_net": [
+        { "date": "2026-02-03", "net_qty": -100 },
+        { "date": "2026-02-04", "net_qty": 0 },
+        { "date": "2026-02-05", "net_qty": 139711 }
+      ]
+    }
+  ],
+  "notes": [
+    "NEPSE floorsheet shows broker agency flow, not beneficial ownership - brokers trade on behalf of clients."
+  ]
+}
+```
+
+#### Exact figures vs. estimates
+
+This endpoint deliberately mixes two very different kinds of number, and separates them
+in the response:
+
+| Field | Reliability |
+|-------|-------------|
+| `bought_qty`, `sold_qty`, `net_qty`, amounts, counts, average rates | **Exact** for the selected range |
+| `baseline_qty`, `estimated_holding_qty` | **Estimate** — depends on floorsheet rows *before* `start_date` |
+
+The carry-forward estimate is:
+
+```
+estimated_holding[b] = baseline_net[b] + period_net[b]
+
+baseline_net[b] = Σ(qty bought by b, date < start) − Σ(qty sold by b, date < start)
+period_net[b]   = Σ(qty bought by b, start ≤ date ≤ end) − Σ(qty sold by b, start ≤ date ≤ end)
+```
+
+#### `holdings_reliability` tiers
+
+| Tier | Meaning |
+|------|---------|
+| `none` | No floorsheet rows exist before `start_date`. `baseline_qty` and `estimated_holding_qty` are **`null`** |
+| `partial` | Prior rows exist but are not continuous across the requested `lookback_days`. An estimate is returned and flagged |
+| `full` | Prior rows are continuous across the lookback window, so the carry-forward position is a sound estimate |
+
+A `null` holdings figure is intentional. Because floorsheet history is incomplete in
+this database (the median stock has only 3 days of data), reporting a confident-looking
+position for most symbols would be misleading. Range analytics remain exact regardless.
+
+#### Other notes
+
+- `net_qty` is **never** clamped to zero. A negative value is a genuine distributing signal.
+- `summary` totals always describe the **whole range**, independent of `limit`. Use
+  `brokers_matched` vs `brokers_reported` to tell whether the broker list was truncated.
+- `share_pct` is a magnitude share across **all** brokers on **both** sides of the trade,
+  so it sums to 100 and a broker's buyer and seller counterpart each hold half.
+- Self-trades are excluded by default because they net to zero for a broker's own position
+  while inflating activity and turnover (2.0% of quantity for KKHC, 6.7% for SIFC).
+- `total_bought_qty` equals `total_sold_qty` for any stock/date window, since every
+  floorsheet row is a matched trade with one buyer and one seller.
+- Broker IDs outside the expected `1-100` range are **flagged in `notes`, not dropped**.
+  ID `101` carries real quantities in this dataset.
+
+#### Errors
+
+| Status | Cause |
+|--------|-------|
+| `400` | Missing `symbol`, malformed date (must be `YYYY-MM-DD`), or `start_date > end_date` |
+| `404` | No `Stock` with the given symbol |
+
+---
+
 ## NEPSE Indices API
 
 The NEPSE Indices API allows you to scrape and analyze market indices data from nepalstock.com. This includes the main NEPSE Index and all sub-indices like Banking, Hydro, Finance, etc.

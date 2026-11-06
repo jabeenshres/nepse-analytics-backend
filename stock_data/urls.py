@@ -33,6 +33,7 @@ from .floorsheet_views import (
     FloorsheetDataView,
     FloorsheetAnalysisView,
     BrokerActivityView,
+    BrokerHoldingsView,
 )
 from .nepse_indices_views import (
     NepseIndicesScrapeView,
@@ -95,6 +96,7 @@ urlpatterns = [
     path('floorsheet/data/', FloorsheetDataView.as_view(), name='floorsheet-data'),
     path('floorsheet/analysis/', FloorsheetAnalysisView.as_view(), name='floorsheet-analysis'),
     path('floorsheet/broker/', BrokerActivityView.as_view(), name='broker-activity'),
+    path('floorsheet/broker-holdings/', BrokerHoldingsView.as_view(), name='broker-holdings'),
     
     # NEPSE Indices endpoints
     path('indices/scrape/', NepseIndicesScrapeView.as_view(), name='nepse-indices-scrape'),
