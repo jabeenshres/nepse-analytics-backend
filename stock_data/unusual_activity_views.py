@@ -5,8 +5,11 @@ These views help identify potential accumulation patterns, unusual volume spikes
 and other anomalies that may precede significant price movements.
 """
 import logging
+import threading
+import time
+import os
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Dict, Any, Optional
 import pandas as pd
 import numpy as np
@@ -18,6 +21,13 @@ from rest_framework.permissions import AllowAny
 
 from django.db.models import Avg, Max, Min, F, Q
 from django.db.models.functions import TruncDate
+from django.db import transaction, connection
+
+from .nepse_calendar import (
+    NEPSE_MON_FRI_START,
+    is_trading_day,
+    next_trading_day,
+)
 
 from .models import Stock, StockData, NepseIndex, StockAnalyticsCache
 
@@ -25,11 +35,52 @@ logger = logging.getLogger(__name__)
 
 DATE_FORMAT = '%Y-%m-%d'
 
+# Thread lock for serializing cache writes to prevent SQLite database locks
+_cache_write_lock = threading.Lock()
 
-def save_analytics_cache_safe(stock, analysis_date, cache_type, result, max_retries=3):
+
+def bulk_load_cache(stocks, analysis_date, cache_type):
     """
-    Save analytics result to cache with retry logic to handle SQLite database locking.
+    Bulk load cache entries for multiple stocks to avoid N+1 queries.
+    This is a standalone function that can be used by all view classes.
     
+    Args:
+        stocks: QuerySet or list of Stock objects
+        analysis_date: Date for analysis
+        cache_type: Type of cache ('top_stocks', 'breakout_watchlist', 'accumulation_alerts')
+        
+    Returns:
+        Dictionary mapping stock_id -> cached analytics_data
+    """
+    from .models import StockAnalyticsCache
+    
+    # Extract stock IDs efficiently
+    if hasattr(stocks, 'values_list'):
+        # It's a QuerySet
+        stock_ids = list(stocks.values_list('id', flat=True))
+    else:
+        # It's a list or iterable
+        stock_ids = [s.id for s in stocks]
+    
+    if not stock_ids:
+        return {}
+    
+    cache_entries = StockAnalyticsCache.objects.filter(
+        stock_id__in=stock_ids,
+        analysis_date=analysis_date,
+        cache_type=cache_type
+    ).values('stock_id', 'analytics_data')
+    
+    # Create dictionary: stock_id -> analytics_data
+    cache_dict = {entry['stock_id']: entry['analytics_data'] for entry in cache_entries}
+    return cache_dict
+
+
+def save_analytics_cache_safe(stock, analysis_date, cache_type, result, max_retries=5):
+    """
+    Save analytics result to cache with retry logic and thread locking to handle SQLite database locking.
+    
+    Uses a thread lock to serialize writes and prevent concurrent write conflicts.
     This is a helper function that can be used by all analytics views to safely
     write to the cache without blocking requests if the database is locked.
     
@@ -38,34 +89,69 @@ def save_analytics_cache_safe(stock, analysis_date, cache_type, result, max_retr
         analysis_date: Date for analysis
         cache_type: Type of cache ('top_stocks', 'breakout_watchlist', 'accumulation_alerts')
         result: Analytics result to cache
-        max_retries: Maximum number of retry attempts (default: 3)
+        max_retries: Maximum number of retry attempts (default: 5, increased from 3)
     """
-    import time
-    from django.db import transaction
-    
-    for attempt in range(max_retries):
-        try:
-            with transaction.atomic():
-                StockAnalyticsCache.objects.update_or_create(
-                    stock=stock,
-                    analysis_date=analysis_date,
-                    cache_type=cache_type,
-                    defaults={'analytics_data': result}
-                )
-            return  # Success, exit retry loop
-        except Exception as e:
-            if attempt < max_retries - 1:
-                # Wait before retrying (exponential backoff)
-                wait_time = (2 ** attempt) * 0.1  # 0.1s, 0.2s, 0.4s
-                time.sleep(wait_time)
-                continue
-            else:
-                # Last attempt failed, log but don't raise (non-blocking cache)
-                logger.warning(
-                    f"Failed to cache analytics for {stock.symbol} "
-                    f"({cache_type}, {analysis_date}) after {max_retries} attempts: {e}"
-                )
-                return  # Don't block the request if caching fails
+    # Use thread lock to serialize cache writes (prevents SQLite concurrent write issues)
+    # This ensures only one cache write happens at a time, preventing database locks
+    with _cache_write_lock:
+        for attempt in range(max_retries):
+            try:
+                # Use a short timeout for the transaction to fail fast if locked
+                with transaction.atomic():
+                    # Try to get existing cache entry first (read operation)
+                    try:
+                        cache_entry = StockAnalyticsCache.objects.get(
+                            stock=stock,
+                            analysis_date=analysis_date,
+                            cache_type=cache_type
+                        )
+                        # Update existing entry
+                        cache_entry.analytics_data = result
+                        cache_entry.save(update_fields=['analytics_data'])
+                    except StockAnalyticsCache.DoesNotExist:
+                        # Create new entry
+                        StockAnalyticsCache.objects.create(
+                            stock=stock,
+                            analysis_date=analysis_date,
+                            cache_type=cache_type,
+                            analytics_data=result
+                        )
+                return  # Success, exit retry loop
+            except Exception as e:
+                error_str = str(e).lower()
+                is_locked = 'locked' in error_str or 'database is locked' in error_str or 'sqlite3.operationalerror' in error_str
+                
+                if attempt < max_retries - 1:
+                    # Wait before retrying (exponential backoff with jitter)
+                    # Increased wait times: 0.2s, 0.4s, 0.8s, 1.6s, 3.2s
+                    wait_time = (2 ** attempt) * 0.2
+                    # Add small random jitter to prevent thundering herd
+                    import random
+                    wait_time += random.uniform(0, 0.1)
+                    time.sleep(wait_time)
+                    
+                    # If database is locked, close connection and retry
+                    if is_locked:
+                        try:
+                            connection.close()
+                        except:
+                            pass
+                    continue
+                else:
+                    # Last attempt failed, log but don't raise (non-blocking cache)
+                    # Only log if it's a real error (not just a lock that will resolve)
+                    if is_locked:
+                        # Use debug level for locks since they're expected in high concurrency
+                        logger.debug(
+                            f"Could not cache analytics for {stock.symbol} "
+                            f"({cache_type}, {analysis_date}) - database locked (non-critical, will retry on next request)"
+                        )
+                    else:
+                        logger.warning(
+                            f"Failed to cache analytics for {stock.symbol} "
+                            f"({cache_type}, {analysis_date}) after {max_retries} attempts: {e}"
+                        )
+                    return  # Don't block the request if caching fails
 
 
 class UnusualActivityDetectorView(APIView):
@@ -518,8 +604,13 @@ class AccumulationAlertView(APIView):
         use_cache = request.query_params.get('use_cache', 'true').lower() == 'true'
         force_recompute = request.query_params.get('force_recompute', 'false').lower() == 'true'
         
+        # Bulk load cache to avoid N+1 queries
+        cache_dict = {}
+        if use_cache and not force_recompute:
+            cache_dict = bulk_load_cache(stocks, analysis_date, 'accumulation_alerts')
+        
         for stock in stocks:
-            result = self._get_accumulation_analysis(stock, analysis_date, use_cache, force_recompute)
+            result = self._get_accumulation_analysis(stock, analysis_date, use_cache, force_recompute, cache_dict)
             if result and result.get('alert'):
                 if alert_level == 'all' or result['alert_level'] == alert_level or \
                    (alert_level == 'medium' and result['alert_level'] in ['high', 'medium']):
@@ -537,7 +628,7 @@ class AccumulationAlertView(APIView):
             'alerts': alerts
         })
     
-    def _get_accumulation_analysis(self, stock: Stock, analysis_date, use_cache=True, force_recompute=False):
+    def _get_accumulation_analysis(self, stock: Stock, analysis_date, use_cache=True, force_recompute=False, cache_dict=None):
         """
         Get accumulation analysis, using cache if available.
         
@@ -546,24 +637,30 @@ class AccumulationAlertView(APIView):
             analysis_date: Date for analysis
             use_cache: Whether to use cached results
             force_recompute: Whether to force recomputation
+            cache_dict: Pre-loaded cache dictionary (stock_id -> analytics_data) to avoid N+1 queries
             
         Returns:
             Analysis result dictionary or None
         """
-        from .models import StockAnalyticsCache
-        
         # Check cache first (unless forcing recompute)
         if use_cache and not force_recompute:
-            try:
-                cache_entry = StockAnalyticsCache.objects.get(
-                    stock=stock,
-                    analysis_date=analysis_date,
-                    cache_type='accumulation_alerts'
-                )
-                # Return cached data
-                return cache_entry.analytics_data
-            except StockAnalyticsCache.DoesNotExist:
-                pass
+            # Use pre-loaded cache dict if provided (faster)
+            if cache_dict is not None:
+                cached_data = cache_dict.get(stock.id)
+                if cached_data is not None:
+                    return cached_data
+            else:
+                # Fallback to individual query (slower, but works for single stock lookups)
+                from .models import StockAnalyticsCache
+                try:
+                    cache_entry = StockAnalyticsCache.objects.get(
+                        stock=stock,
+                        analysis_date=analysis_date,
+                        cache_type='accumulation_alerts'
+                    )
+                    return cache_entry.analytics_data
+                except StockAnalyticsCache.DoesNotExist:
+                    pass
         
         # Compute analysis
         result = self._analyze_single_stock(stock, analysis_date)
@@ -738,8 +835,13 @@ class TopStocksToWatchView(APIView):
         if stock_type.lower() != 'all':
             stocks = stocks.filter(stock_type=stock_type)
         
+        # Bulk load cache to avoid N+1 queries
+        cache_dict = {}
+        if use_cache and not force_recompute:
+            cache_dict = bulk_load_cache(stocks, analysis_date, 'top_stocks')
+        
         for stock in stocks:
-            result = self._get_stock_analysis(stock, analysis_date, use_cache, force_recompute, 'top_stocks')
+            result = self._get_stock_analysis(stock, analysis_date, use_cache, force_recompute, 'top_stocks', cache_dict)
             if result and result['combined_score'] >= min_score:
                 all_stocks.append(result)
         
@@ -762,7 +864,7 @@ class TopStocksToWatchView(APIView):
             'stocks': top_stocks
         })
     
-    def _get_stock_analysis(self, stock: Stock, analysis_date, use_cache=True, force_recompute=False, cache_type='top_stocks'):
+    def _get_stock_analysis(self, stock: Stock, analysis_date, use_cache=True, force_recompute=False, cache_type='top_stocks', cache_dict=None):
         """
         Get stock analysis, using cache if available.
         
@@ -772,24 +874,30 @@ class TopStocksToWatchView(APIView):
             use_cache: Whether to use cached results
             force_recompute: Whether to force recomputation
             cache_type: Type of cache ('top_stocks', 'breakout_watchlist', 'accumulation_alerts')
+            cache_dict: Pre-loaded cache dictionary (stock_id -> analytics_data) to avoid N+1 queries
             
         Returns:
             Analysis result dictionary or None
         """
-        from .models import StockAnalyticsCache
-        
         # Check cache first (unless forcing recompute)
         if use_cache and not force_recompute:
-            try:
-                cache_entry = StockAnalyticsCache.objects.get(
-                    stock=stock,
-                    analysis_date=analysis_date,
-                    cache_type=cache_type
-                )
-                # Return cached data
-                return cache_entry.analytics_data
-            except StockAnalyticsCache.DoesNotExist:
-                pass
+            # Use pre-loaded cache dict if provided (faster)
+            if cache_dict is not None:
+                cached_data = cache_dict.get(stock.id)
+                if cached_data is not None:
+                    return cached_data
+            else:
+                # Fallback to individual query (slower, but works for single stock lookups)
+                from .models import StockAnalyticsCache
+                try:
+                    cache_entry = StockAnalyticsCache.objects.get(
+                        stock=stock,
+                        analysis_date=analysis_date,
+                        cache_type=cache_type
+                    )
+                    return cache_entry.analytics_data
+                except StockAnalyticsCache.DoesNotExist:
+                    pass
         
         # Compute analysis based on cache type
         if cache_type == 'top_stocks':
@@ -2066,31 +2174,54 @@ class StockRecommendationsView(APIView):
     def _get_settlement_info(self) -> dict:
         """
         Get T+2 settlement information for Nepal market.
-        Trading days: Sunday-Thursday (Friday is holiday)
+
+        The Nepal trading week changed on 2026-04-06: the exchange traded Sun-Thu before
+        that (closed Fri/Sat) and trades Mon-Fri after (closed Sat/Sun). The available day
+        is therefore derived from the live calendar rather than a hardcoded weekday map,
+        so it stays correct across the transition and any future change.
+        See stock_data/nepse_calendar.py.
         """
-        today = datetime.now()
-        day_of_week = today.weekday()  # 0=Monday, 6=Sunday
-        
-        # Nepal trading days mapping (Sunday=6 is trading, Friday=4 is holiday)
-        # weekday(): Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6
-        
-        settlement_map = {
-            6: {'buy_day': 'Sunday', 'available_day': 'Wednesday', 'trading_days_wait': 2},
-            0: {'buy_day': 'Monday', 'available_day': 'Thursday', 'trading_days_wait': 2},
-            1: {'buy_day': 'Tuesday', 'available_day': 'Sunday', 'trading_days_wait': 2},
-            2: {'buy_day': 'Wednesday', 'available_day': 'Monday', 'trading_days_wait': 2},
-            3: {'buy_day': 'Thursday', 'available_day': 'Tuesday', 'trading_days_wait': 3},  # Friday gap
-        }
-        
-        info = settlement_map.get(day_of_week, {'buy_day': 'N/A', 'available_day': 'T+2', 'trading_days_wait': 2})
-        
+        today = datetime.now().date()
+
+        if is_trading_day(today):
+            buy_day = today
+            trading_days_wait = 2
+        else:
+            # Bought before the weekend: settlement runs from the next open session.
+            buy_day = next_trading_day(today)
+            trading_days_wait = 1
+
+        available = next_trading_day(buy_day, trading_days_wait)
+
         return {
             'rule': 'T+2 Settlement',
             'explanation': 'Shares bought today will be available for trading after 2 trading days',
             'current_day': today.strftime('%A'),
-            **info,
+            'buy_day': buy_day.strftime('%A'),
+            'available_day': available.strftime('%A'),
+            'trading_days_wait': trading_days_wait,
             'implication': 'Price may move during settlement period - factor this into entry decision'
         }
+    
+    def _build_settlement_examples(self) -> dict:
+        """
+        Worked T+2 examples for each weekday under the current trading calendar.
+
+        Derived from stock_data/nepse_calendar rather than hardcoded, so the examples stay
+        correct across the Sun-Thu -> Mon-Fri transition instead of going stale.
+        """
+        today = date.today()
+        examples = {}
+        for offset in range(7):
+            buy_date = today + timedelta(days=offset)
+            if not is_trading_day(buy_date):
+                continue
+            available = next_trading_day(buy_date, 2)
+            note = ' (weekend intervened)' if (available - buy_date).days > 2 else ''
+            examples[f'{buy_date.strftime("%A").lower()}_buy'] = (
+                f"Available {available.strftime('%A')}{note}"
+            )
+        return examples
     
     def _generate_recommendation(self, stock: dict, market_trend: str = 'neutral') -> dict:
         """
@@ -2425,16 +2556,14 @@ class StockRecommendationsView(APIView):
                 'key_rules': {
                     'no_short_selling': 'Short selling is not allowed - only buy recommendations provided',
                     't2_settlement': 'T+2 settlement means shares are available 2 trading days after purchase',
-                    'trading_days': 'Market open Sunday-Thursday, Friday is closed',
+                    'trading_days': (
+                        'Market open Monday-Friday, Saturday and Sunday closed'
+                        if date.today() >= NEPSE_MON_FRI_START
+                        else 'Market open Sunday-Thursday, Friday and Saturday closed'
+                    ),
                     'minimum_upside': '5% upside required to justify T+2 wait period'
                 },
-                'settlement_examples': {
-                    'sunday_buy': 'Available Wednesday',
-                    'monday_buy': 'Available Thursday',
-                    'tuesday_buy': 'Available Sunday',
-                    'wednesday_buy': 'Available Monday',
-                    'thursday_buy': 'Available Tuesday (3 calendar days due to Friday holiday)'
-                }
+                'settlement_examples': self._build_settlement_examples()
             },
             'market_analysis': {
                 'description': 'NEPSE Index trend analysis to determine market conditions',
@@ -2554,8 +2683,13 @@ class BreakoutWatchlistView(APIView):
         use_cache = request.query_params.get('use_cache', 'true').lower() == 'true'
         force_recompute = request.query_params.get('force_recompute', 'false').lower() == 'true'
         
+        # Bulk load cache to avoid N+1 queries
+        cache_dict = {}
+        if use_cache and not force_recompute:
+            cache_dict = bulk_load_cache(stocks, analysis_date, 'breakout_watchlist')
+        
         for stock in stocks:
-            result = self._get_breakout_analysis(stock, analysis_date, use_cache, force_recompute)
+            result = self._get_breakout_analysis(stock, analysis_date, use_cache, force_recompute, cache_dict)
             if result:
                 watchlist.append(result)
         
@@ -2568,7 +2702,7 @@ class BreakoutWatchlistView(APIView):
             'watchlist': watchlist[:30]  # Top 30
         })
     
-    def _get_breakout_analysis(self, stock: Stock, analysis_date, use_cache=True, force_recompute=False):
+    def _get_breakout_analysis(self, stock: Stock, analysis_date, use_cache=True, force_recompute=False, cache_dict=None):
         """
         Get breakout analysis, using cache if available.
         
@@ -2577,24 +2711,30 @@ class BreakoutWatchlistView(APIView):
             analysis_date: Date for analysis
             use_cache: Whether to use cached results
             force_recompute: Whether to force recomputation
+            cache_dict: Pre-loaded cache dictionary (stock_id -> analytics_data) to avoid N+1 queries
             
         Returns:
             Analysis result dictionary or None
         """
-        from .models import StockAnalyticsCache
-        
         # Check cache first (unless forcing recompute)
         if use_cache and not force_recompute:
-            try:
-                cache_entry = StockAnalyticsCache.objects.get(
-                    stock=stock,
-                    analysis_date=analysis_date,
-                    cache_type='breakout_watchlist'
-                )
-                # Return cached data
-                return cache_entry.analytics_data
-            except StockAnalyticsCache.DoesNotExist:
-                pass
+            # Use pre-loaded cache dict if provided (faster)
+            if cache_dict is not None:
+                cached_data = cache_dict.get(stock.id)
+                if cached_data is not None:
+                    return cached_data
+            else:
+                # Fallback to individual query (slower, but works for single stock lookups)
+                from .models import StockAnalyticsCache
+                try:
+                    cache_entry = StockAnalyticsCache.objects.get(
+                        stock=stock,
+                        analysis_date=analysis_date,
+                        cache_type='breakout_watchlist'
+                    )
+                    return cache_entry.analytics_data
+                except StockAnalyticsCache.DoesNotExist:
+                    pass
         
         # Compute analysis
         result = self._analyze_breakout_potential(stock, analysis_date)
