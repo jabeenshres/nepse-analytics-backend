@@ -58,7 +58,11 @@ class FloorsheetDataAdmin(admin.ModelAdmin):
     ]
     list_filter = ['transaction_date', 'stock', 'buyer_broker', 'seller_broker']
     search_fields = ['stock__symbol', 'transaction_no']
-    date_hierarchy = 'transaction_date'
+    # Deliberately no date_hierarchy: on SQLite it issues
+    #   SELECT DISTINCT django_date_trunc('year', transaction_date) ...
+    # which cannot use the index and scans all ~1.2M rows (measured ~4.2s of the
+    # ~7.5s page load). The transaction_date filter above still provides
+    # Today / Past 7 days / This month / This year navigation.
     readonly_fields = ['scraped_at']
     ordering = ['-transaction_date', '-transaction_no']
     
