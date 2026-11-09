@@ -1,0 +1,21 @@
+[Unit]
+Description=NEPSE API (Django + Gunicorn)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=nepse
+Group=nepse
+WorkingDirectory=/srv/nepse/stock_BE
+EnvironmentFile=/srv/nepse/stock_BE/.env
+ExecStart=/srv/nepse/venv/bin/gunicorn stock_BE.wsgi:application -c /srv/nepse/stock_BE/gunicorn.conf.py
+Restart=always
+RestartSec=3
+TimeoutStopSec=35
+
+# Basic hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

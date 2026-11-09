@@ -159,3 +159,16 @@ ehthumbs.db
 # Project specific
 media/
 staticfiles/
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# Generated static files
+staticfiles/
+media/
+
+# Local database and backups
+db.sqlite3
+db.sqlite3.backup-*
+*.sqlite3
