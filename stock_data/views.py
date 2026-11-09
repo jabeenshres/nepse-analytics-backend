@@ -63,7 +63,6 @@ class StockDataViewSet(viewsets.ModelViewSet):
     """
     queryset = StockData.objects.select_related('stock').all()
     serializer_class = StockDataSerializer
-    permission_classes = [AllowAny]
     pagination_class = StockDataPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StockDataFilter
@@ -99,7 +98,6 @@ class StockViewSet(viewsets.ModelViewSet):
     """
     queryset = Stock.objects.prefetch_related('data').all()
     serializer_class = StockSerializer
-    permission_classes = [AllowAny]
     pagination_class = StockPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = StockFilter
@@ -156,7 +154,6 @@ class LoadStockDataView(APIView):
     Requires admin or manager permissions.
     """
     # permission_classes = [IsAdminOrManager]
-    permission_classes = [AllowAny]
 
     def post(self, request, format=None):
         """
@@ -293,7 +290,6 @@ class StructuredDataView(APIView):
     Note: This endpoint returns all data without pagination as it's designed
     for ML model training which typically needs the full dataset.
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """
@@ -350,7 +346,6 @@ class LatestStockDataViewSet(viewsets.ViewSet):
     """
     ViewSet for retrieving latest stock data with filtering and pagination.
     """
-    permission_classes = [AllowAny]
     pagination_class = StockDataPagination
 
     def list(self, request):

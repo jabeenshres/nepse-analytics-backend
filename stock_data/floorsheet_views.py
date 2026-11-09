@@ -40,7 +40,6 @@ class FloorsheetUploadView(APIView):
     
     Returns parsed transactions and saves to database.
     """
-    permission_classes = [AllowAny]
     
     def post(self, request):
         symbol = request.data.get('symbol')
@@ -159,7 +158,6 @@ class FloorsheetScrapeView(APIView):
     4. Scrape ALL pages of data (handles pagination)
     5. Save only new transactions to database
     """
-    permission_classes = [AllowAny]
     
     # Date format expected by merolagani.com
     DATE_FORMAT = "%m/%d/%Y"
@@ -344,7 +342,6 @@ class NepalstockFloorsheetScrapeView(APIView):
     Note: The scraper uses the same FloorsheetData model as merolagani.com scraper.
     No symbol or date filters are applied - it scrapes ALL available data.
     """
-    permission_classes = [AllowAny]
     
     def post(self, request):
         save_to_db = request.data.get('save_to_db', True)
@@ -417,7 +414,6 @@ class FloorsheetDataView(APIView):
         - seller: Filter by seller broker number
         - limit: Max records (default: 1000)
     """
-    permission_classes = [AllowAny]
     
     def get(self, request):
         symbol = request.query_params.get('symbol')
@@ -532,7 +528,6 @@ class FloorsheetAnalysisView(APIView):
         - Large block trades
         - Daily volume patterns
     """
-    permission_classes = [AllowAny]
     
     def get(self, request):
         symbol = request.query_params.get('symbol')
@@ -688,7 +683,6 @@ class BrokerActivityView(APIView):
         - symbol: Optional - filter to specific stock
         - role: 'buyer', 'seller', or 'both' (default: 'both')
     """
-    permission_classes = [AllowAny]
     
     def get(self, request):
         broker = request.query_params.get('broker')
@@ -856,7 +850,6 @@ class BrokerHoldingsView(APIView):
     `holdings_reliability` is reported as `none` rather than returning a number
     that looks authoritative but is not.
     """
-    permission_classes = [AllowAny]
 
     DATE_FORMAT = '%Y-%m-%d'
     DEFAULT_RANGE_DAYS = 30

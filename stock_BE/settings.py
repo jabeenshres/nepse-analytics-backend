@@ -107,6 +107,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 30,  # Increase SQLite timeout to 30 seconds to handle concurrent writes better
+        },
     }
 }
 
@@ -155,11 +158,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Rest Framework Start
 REST_FRAMEWORK = {
-     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        # 'rest_framework.permissions.IsAuthenticated',
+        'accounts.permissions.HasFeatureAccess',
     ),
     'DEFAULT_PAGINATION_CLASS': 'stock_BE.pagination.StandardResultsSetPagination',
     'DEFAULT_FILTER_BACKENDS': [

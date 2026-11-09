@@ -174,7 +174,6 @@ class UnusualActivityDetectorView(APIView):
     Returns:
         List of stocks with unusual activity patterns sorted by suspicion score
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """Detect unusual activity patterns across all stocks."""
@@ -532,7 +531,6 @@ class AccumulationAlertView(APIView):
         symbol: Optional - specific stock to check
         alert_level: 'high', 'medium', 'all' (default: 'high')
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """Get accumulation alerts."""
@@ -787,7 +785,6 @@ class TopStocksToWatchView(APIView):
     Returns:
         Top N stocks ranked by combined watchability score, or specific stock(s) analysis
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """Get top stocks to watch based on combined analysis."""
@@ -1291,7 +1288,6 @@ class VolumeSpikeDetectorView(APIView):
     Returns:
         Stocks with volume spikes ranked by max spike ratio (highest first)
     """
-    permission_classes = [AllowAny]
     
     # Keywords to identify mutual funds and debentures (same as StockRecommendationsView)
     EXCLUDE_KEYWORDS_MF = ['fund', 'yojana', 'scheme', 'growth', 'balanced', 'flexi', 'value fund', 'equity fund', 'promotor share','promoter share']
@@ -1523,7 +1519,6 @@ class StockRecommendationsView(APIView):
     Returns:
         Market analysis + Categorized recommendations with targets
     """
-    permission_classes = [AllowAny]
     
     # Keywords to identify mutual funds and debentures
     EXCLUDE_KEYWORDS = [
@@ -2648,7 +2643,6 @@ class BreakoutWatchlistView(APIView):
     2. Price consolidation near resistance
     3. Technical breakout signals
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """Get potential breakout candidates."""

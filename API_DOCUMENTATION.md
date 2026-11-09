@@ -19,15 +19,66 @@ http://localhost:8000/api
 
 ## Authentication
 
-Most endpoints are publicly accessible (`AllowAny`), but some operations require authentication:
+**Every API endpoint requires a JWT except the login, refresh and registration routes.**
+Anonymous requests receive `401 Unauthorized`.
 
-- **Admin/Manager Required**: Data fetching and prediction generation
-- **Public Access**: Data retrieval, listing, and filtering
+```
+POST /api/accounts/token/          # login (public)
+POST /api/token/refresh/           # refresh an access token (public)
+POST /api/accounts/register/       # registration (public)
+GET  /api/accounts/me/             # current identity + allowed features
+```
 
-For protected endpoints, include JWT token in the Authorization header:
+Include the access token on every other request:
+
 ```
 Authorization: Bearer <your_jwt_token>
 ```
+
+Login response:
+
+```json
+{
+  "refresh": "...",
+  "access": "...",
+  "role": "manager",
+  "username": "someone",
+  "is_superuser": false,
+  "access_expires_at": "2026-11-11T10:00:00+00:00"
+}
+```
+
+### Roles and features
+
+Access is driven by `accounts/access_config.py` (`ROLE_ACCESS`). Roles are `admin`,
+`manager` and `user`; superusers bypass every check.
+
+| Feature | `user` | `manager` | `admin` / superuser |
+|---|:---:|:---:|:---:|
+| `dashboard`, `sharelist`, `top_stocks`, `indices`, `screener`, `broker_holdings`, `about` | ✓ | ✓ | ✓ |
+| `download` (fetch, scrape, upload, predictions, indices scrape) | ✗ | ✓ | ✓ |
+| `users` (`/api/accounts/users/`) | ✗ | ✗ | ✓ |
+
+`GET /api/accounts/me/` returns the caller's allowed feature keys, which the frontend
+uses to build the sidebar and guard pages:
+
+```json
+{
+  "id": 3,
+  "username": "someone",
+  "email": "someone@example.com",
+  "role": "manager",
+  "is_superuser": false,
+  "features": ["about", "broker_holdings", "dashboard", "download",
+                "indices", "screener", "sharelist", "top_stocks"]
+}
+```
+
+To change what a role can reach, edit `ROLE_ACCESS` (and `VIEW_FEATURES` for API
+endpoints that differ from their page). No view or sidebar code needs to change.
+
+Write operations on `StockData` / `Stock` (`POST`/`PUT`/`PATCH`/`DELETE`) require the
+`download` feature; reads are open to any authenticated user.
 
 ---
 

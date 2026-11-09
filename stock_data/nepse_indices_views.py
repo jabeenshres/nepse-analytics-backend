@@ -65,7 +65,6 @@ class NepseIndicesScrapeView(APIView):
         "target_date": "2026-02-01"
     }
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """Return available indices information."""
@@ -206,7 +205,6 @@ class NepseIndicesDataView(APIView):
     - limit: Max records to return (default: 100)
     - offset: Pagination offset
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         index_id = request.query_params.get('index_id')
@@ -301,7 +299,6 @@ class NepseIndicesAnalysisView(APIView):
     - days: Analysis period in days (default: 30)
     - period: 'daily', 'weekly', 'monthly' aggregation
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         index_id = request.query_params.get('index_id')
@@ -445,7 +442,6 @@ class NepseIndicesCompareView(APIView):
     - index_ids: Comma-separated list of index IDs (e.g., 58,51,54)
     - days: Comparison period in days (default: 30)
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         index_ids_str = request.query_params.get('index_ids')
@@ -546,7 +542,6 @@ class NepseIndicesListView(APIView):
     
     GET /api/stock-data/indices/list/
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         indices_list = []

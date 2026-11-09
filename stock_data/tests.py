@@ -12,6 +12,8 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
+from django.contrib.auth import get_user_model
+
 from .broker_holdings import compute_broker_holdings, compute_baseline
 from .floorsheet_scraper import MerolaganiFloorsheetScraper
 from .models import FloorsheetData, Stock, StockData
@@ -488,6 +490,12 @@ class BrokerHoldingsViewTests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
+        # The API requires authentication and the broker_holdings feature, which the
+        # default 'user' role has.
+        self.user = get_user_model().objects.create_user(
+            username='broker_holdings_user', password='pass1234', role='user'
+        )
+        self.client.force_authenticate(user=self.user)
         self.stock = make_stock()
         self.url = reverse('broker-holdings')
         self.d1 = date(2026, 1, 5)

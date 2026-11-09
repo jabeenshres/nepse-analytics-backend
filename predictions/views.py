@@ -30,7 +30,6 @@ class GetPredictionsView(APIView):
     Requires admin or manager permissions.
     """
     # permission_classes = [IsAdminOrManager]
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """
@@ -68,7 +67,6 @@ class AddLSTMPredictionView(APIView):
     """
     API view for adding LSTM model predictions.
     """
-    permission_classes = [AllowAny]
 
     def post(self, request, format=None):
         """
@@ -263,7 +261,6 @@ class AddRFPredictionView(AddLSTMPredictionView):
     """
     API view for adding Random Forest model predictions.
     """
-    permission_classes = [AllowAny]
 
     def post(self, request, format=None):
         """

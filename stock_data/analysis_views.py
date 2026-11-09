@@ -49,7 +49,6 @@ class TechnicalIndicatorsView(APIView):
         - Support/Resistance levels
         - Volume indicators
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """Get technical indicators for a stock."""
@@ -123,7 +122,6 @@ class TradingSignalsView(APIView):
         - Overall signal strength (-100 to +100)
         - Recommendation (STRONG_BUY, BUY, HOLD, SELL, STRONG_SELL)
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """Generate trading signals for a stock."""
@@ -204,7 +202,6 @@ class StockScreenerView(APIView):
         - volume_breakout: Stocks with volume significantly above average
         - trend_following: Stocks in clear uptrend (price > SMA20 > SMA50)
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """Screen stocks based on criteria."""
@@ -389,7 +386,6 @@ class BacktestStrategyView(APIView):
             }
         }
     """
-    permission_classes = [AllowAny]
 
     def post(self, request):
         """Run backtest for a strategy."""
@@ -751,7 +747,6 @@ class PortfolioPerformanceView(APIView):
     1. Existing portfolio (GET with portfolio_id)
     2. Ad-hoc trades list (POST with trades array)
     """
-    permission_classes = [AllowAny]
 
     def get(self, request):
         """Get performance for an existing portfolio."""
