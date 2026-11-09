@@ -74,8 +74,12 @@ uses to build the sidebar and guard pages:
 }
 ```
 
-To change what a role can reach, edit `ROLE_ACCESS` (and `VIEW_FEATURES` for API
-endpoints that differ from their page). No view or sidebar code needs to change.
+To change what a role can reach, open **Django admin → Role feature access**
+(`/admin/accounts/rolefeatureaccess/`): filter by role, tick or untick `allowed` in the
+list, and press Save. Changes apply on the next request — no restart, rebuild or code
+edit. That table is the live source of truth; the `ROLE_ACCESS` map in
+`accounts/access_config.py` is only the fallback used when the table is empty.
+`VIEW_FEATURES` in the same module decides which API view belongs to which feature.
 
 Write operations on `StockData` / `Stock` (`POST`/`PUT`/`PATCH`/`DELETE`) require the
 `download` feature; reads are open to any authenticated user.

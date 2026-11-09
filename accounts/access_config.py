@@ -102,8 +102,39 @@ VIEW_WRITE_FEATURES = {
 }
 
 
+def _db_role_matrix():
+    """
+    Return ``{role: {feature, ...}}`` from RoleFeatureAccess, or None when the table
+    has no rows yet (fresh database / test run before the seed migration).
+    """
+    from .models import RoleFeatureAccess
+
+    rows = list(
+        RoleFeatureAccess.objects.values_list('role', 'feature', 'allowed')
+    )
+    if not rows:
+        return None
+
+    matrix = {}
+    for role, feature, allowed in rows:
+        matrix.setdefault(role, set())
+        if allowed:
+            matrix[role].add(feature)
+    return matrix
+
+
 def features_for_role(role):
-    """Return the set of feature keys granted to ``role``."""
+    """
+    Return the feature keys granted to ``role``.
+
+    The database matrix wins once it has been seeded, so access can be changed from
+    Django admin without editing code. The code ``ROLE_ACCESS`` map is only the
+    fallback for a database whose matrix is empty.
+    """
+    matrix = _db_role_matrix()
+    if matrix is not None:
+        return set(matrix.get(role, set())) & set(FEATURES)
+
     allowed = ROLE_ACCESS.get(role, [])
     if '*' in allowed:
         return set(FEATURES)

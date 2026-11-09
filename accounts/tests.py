@@ -4,6 +4,7 @@ from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
 
 from .access_config import allowed_features, has_feature
+from .models import RoleFeatureAccess
 
 
 User = get_user_model()
@@ -146,3 +147,60 @@ class TokenTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('access', response.data)
+
+
+class RoleFeatureMatrixTests(TestCase):
+    """
+    The matrix is now DB-backed so it can be edited in Django admin. The seeded rows
+    must reproduce the old defaults, and toggling a row must change access.
+    """
+
+    def _user(self, role):
+        return User.objects.create_user(
+            username=f'matrix_{role}', password='pass1234', role=role
+        )
+
+    def test_seed_matches_previous_defaults(self):
+        manager = self._user('manager')
+        user = self._user('user')
+
+        self.assertIn('download', allowed_features(manager))
+        self.assertIn('users', allowed_features(self._user('admin')))
+        self.assertNotIn('download', allowed_features(user))
+        self.assertIn('dashboard', allowed_features(user))
+
+    def test_revoking_a_row_removes_the_feature(self):
+        user = self._user('user')
+        self.assertIn('screener', allowed_features(user))
+
+        RoleFeatureAccess.objects.filter(role='user', feature='screener').update(
+            allowed=False
+        )
+
+        self.assertNotIn('screener', allowed_features(user))
+
+    def test_granting_a_row_adds_the_feature(self):
+        manager = self._user('manager')
+        self.assertNotIn('users', allowed_features(manager))
+
+        RoleFeatureAccess.objects.filter(role='manager', feature='users').update(
+            allowed=True
+        )
+
+        self.assertIn('users', allowed_features(manager))
+
+    def test_empty_matrix_falls_back_to_code_defaults(self):
+        RoleFeatureAccess.objects.all().delete()
+
+        features = allowed_features(self._user('user'))
+
+        self.assertIn('dashboard', features)
+        self.assertIn('sharelist', features)
+
+    def test_every_role_feature_pair_is_seeded(self):
+        roles = ['admin', 'manager', 'user']
+        features = list(RoleFeatureAccess.objects.values_list('feature', flat=True))
+
+        self.assertEqual(
+            RoleFeatureAccess.objects.count(), len(roles) * len(set(features))
+        )

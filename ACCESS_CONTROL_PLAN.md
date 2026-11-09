@@ -140,14 +140,18 @@ user    -> all except download, users
 
 ### Configuration
 
-| Concern | File |
+| Concern | File / place |
 |---|---|
-| Roles -> features, API view -> feature | `stock_BE/accounts/access_config.py` |
+| Live roles -> features matrix | **Django admin -> Role feature access** (`RoleFeatureAccess` table) |
+| Fallback defaults + API view -> feature | `stock_BE/accounts/access_config.py` |
 | Sidebar labels/paths/icons | `Stock_FE/src/app/config/features.js` |
 
-Feature keys must match between the two files. To add a destination: add the key to
-both `FEATURES` maps, add it to the relevant `ROLE_ACCESS` entries, and add a
-`VIEW_FEATURES` entry for its API view.
+Feature keys must match between the backend and the frontend. To add a destination:
+add the key to both `FEATURES` maps, add it to the relevant `ROLE_ACCESS` entries, and
+add a `VIEW_FEATURES` entry for its API view.
+
+Day-to-day access changes are made in the admin: filter by role, tick/untick `allowed`,
+Save. The `ROLE_ACCESS` map is only used when `RoleFeatureAccess` has no rows.
 
 ### Backend files
 
