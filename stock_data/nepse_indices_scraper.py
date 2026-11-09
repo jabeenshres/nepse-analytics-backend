@@ -28,10 +28,10 @@ logger = logging.getLogger(__name__)
 
 # Constants
 BASE_URL = "https://nepalstock.com/indices"
-PAGE_LOAD_WAIT_TIME = 15  # Increased for Angular app
-ELEMENT_WAIT_TIMEOUT = 30  # Increased for Angular app
+PAGE_LOAD_WAIT_TIME = 3  # Increased for Angular app
+ELEMENT_WAIT_TIMEOUT = 10  # Increased for Angular app
 PAGINATION_WAIT_TIME = 5
-ANGULAR_BOOTSTRAP_WAIT = 15  # Time for Angular to fully bootstrap
+ANGULAR_BOOTSTRAP_WAIT = 3  # Time for Angular to fully bootstrap
 
 # Index mappings
 INDEX_MAPPING = {
@@ -141,7 +141,7 @@ class NepseIndicesScraper:
             )
             
             # Additional wait for data to settle
-            time.sleep(2)
+            time.sleep(1)
             
             # Verify we have data
             rows = self.driver.find_elements(By.XPATH, "//tbody/tr")
@@ -174,7 +174,7 @@ class NepseIndicesScraper:
             select = Select(dropdown)
             select.select_by_value(str(index_id))
             
-            time.sleep(2)
+            time.sleep(0.5)
             print(f"Selected index: {INDEX_MAPPING.get(index_id, str(index_id))}")
             return True
             
@@ -221,22 +221,22 @@ class NepseIndicesScraper:
             
             # Scroll into view
             self.driver.execute_script("arguments[0].scrollIntoView(true);", filter_btn)
-            time.sleep(1)
+            time.sleep(0.2)
             
             # Click using JavaScript
             self.driver.execute_script("arguments[0].click();", filter_btn)
             
             # Wait for data to load - Angular needs time to update
             print("Waiting for data to load...")
-            time.sleep(PAGINATION_WAIT_TIME)
+            time.sleep(0.3)
             
             # Wait for table rows to be present
             self.wait.until(
                 EC.presence_of_element_located((By.XPATH, "//tbody/tr"))
             )
             
-            # Additional wait for data to settle
-            time.sleep(2)
+            # # Additional wait for data to settle
+            # time.sleep(2)
             
             rows = self.driver.find_elements(By.XPATH, "//tbody/tr")
             print(f"Filter applied successfully - {len(rows)} rows loaded")
@@ -448,9 +448,10 @@ class NepseIndicesScraper:
             if not self.select_index(index_id):
                 return all_records
             
-            # Set items per page to 500
-            if not self.set_items_per_page(500):
-                print("Warning: Could not set items per page, using default")
+            # This was needed for first time only.
+            # # Set items per page to 500
+            # if not self.set_items_per_page(500):
+            #     print("Warning: Could not set items per page, using default")
             
             # Click filter to apply
             if not self.click_filter_button():
