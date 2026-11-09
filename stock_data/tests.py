@@ -7,7 +7,11 @@ the expected numbers can be checked by hand.
 """
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from io import StringIO
+import os
+from unittest import mock
 
+from django.core.management import call_command
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -25,6 +29,12 @@ from .nepse_calendar import (
     weekend_weekdays,
 )
 from .nepalstock_floorsheet_scraper import NepalstockFloorsheetScraper
+from .scraping_jobs import (
+    JobResult,
+    is_satisfied,
+    parse_holidays,
+    run_with_retries,
+)
 from .utils import NepalStockScraper
 from .unusual_activity_views import StockRecommendationsView
 
@@ -1020,3 +1030,85 @@ class TodayPriceSaveTests(TestCase):
 
         self.assertEqual(stats['created'], 0)
         self.assertEqual(stats['unresolved'], [])
+
+
+class ScrapingJobHelpersTests(SimpleTestCase):
+    """Pure helpers used by run_scrape / run_daily_scrape."""
+
+    def test_parse_holidays_ignores_invalid_entries(self):
+        holidays = parse_holidays('2026-10-20, 2026-10-21,not-a-date,,2026-10-20')
+
+        self.assertEqual(holidays, {date(2026, 10, 20), date(2026, 10, 21)})
+
+    def test_is_satisfied_per_task(self):
+        self.assertTrue(is_satisfied('indices', {'indices': 1}))
+        self.assertFalse(is_satisfied('indices', {'indices': 0}))
+        self.assertFalse(is_satisfied('today-price', {'stock_data': 99}, min_stock_rows=100))
+        self.assertTrue(is_satisfied('today-price', {'stock_data': 100}, min_stock_rows=100))
+        self.assertTrue(is_satisfied('floorsheet', {'floorsheet': 1}))
+
+    def test_retries_until_success(self):
+        calls = {'n': 0}
+
+        def flaky():
+            calls['n'] += 1
+            return JobResult(
+                name='flaky',
+                status='ok' if calls['n'] >= 2 else 'no_data',
+            )
+
+        result = run_with_retries('flaky', flaky, attempts=3, delays=(0, 0))
+
+        self.assertEqual(calls['n'], 2)
+        self.assertEqual(result.status, 'ok')
+
+    def test_retries_then_reports_error(self):
+        calls = {'n': 0}
+
+        def boom():
+            calls['n'] += 1
+            raise RuntimeError('scraper exploded')
+
+        result = run_with_retries('boom', boom, attempts=2, delays=(0,))
+
+        self.assertEqual(calls['n'], 2)
+        self.assertEqual(result.status, 'error')
+        self.assertIn('scraper exploded', result.detail)
+
+    def test_stops_after_exhausting_attempts(self):
+        result = run_with_retries(
+            'empty',
+            lambda: JobResult(name='empty', status='no_data'),
+            attempts=2,
+            delays=(0,),
+        )
+
+        self.assertEqual(result.status, 'no_data')
+
+
+class RunDailyScrapeCommandTests(TestCase):
+    def test_weekend_is_skipped_without_scraping(self):
+        out = StringIO()
+        # 2026-11-08 is a Sunday.
+        call_command('run_daily_scrape', '--date', '2026-11-08', stdout=out)
+
+        self.assertIn('not a trading day', out.getvalue())
+
+    def test_env_holiday_is_skipped(self):
+        out = StringIO()
+        with mock.patch.dict(os.environ, {'NEPSE_HOLIDAYS': '2026-11-06'}):
+            call_command('run_daily_scrape', '--date', '2026-11-06', stdout=out)
+
+        self.assertIn('holiday', out.getvalue())
+
+    def test_dry_run_does_not_scrape(self):
+        out = StringIO()
+        call_command('run_daily_scrape', '--date', '2026-11-06', '--dry-run', stdout=out)
+
+        self.assertIn('Dry run', out.getvalue())
+
+    def test_only_requires_valid_task_names(self):
+        from django.core.management.base import CommandError
+
+        with self.assertRaises(CommandError):
+            call_command('run_daily_scrape', '--date', '2026-11-06', '--only', 'nope')

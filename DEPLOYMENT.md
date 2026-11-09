@@ -282,41 +282,73 @@ created above has one.
 
 ---
 
-## 8. Scheduled scrapes (recommended over HTTP)
+## 8. Scheduled scrapes
 
-Long Selenium runs should not go through the web worker. Use the management command.
+Long Selenium runs must not go through the web worker. `run_daily_scrape` runs the
+three datasets in order, retries, verifies the database, and exits non-zero on failure.
 
-Create `/srv/nepse/scripts/scrape-daily.sh`:
+Order: `indices` → `today-price` → `floorsheet`.
+
+### systemd timer (recommended)
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
+sudo cp /srv/nepse/stock_BE/deploy/nepse-scrape.service /etc/systemd/system/
+sudo cp /srv/nepse/stock_BE/deploy/nepse-scrape.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now nepse-scrape.timer
+systemctl list-timers nepse-scrape.timer
+journalctl -u nepse-scrape.service -f
+```
+
+Runs Mon-Fri at 18:00, 20:00 and 22:00 Asia/Kathmandu. Later runs are cheap: the
+command only fills dates that are still missing.
+
+Useful environment variables in `.env`:
+
+```
+NEPSE_HOLIDAYS=2026-10-20,2026-10-21   # dates to skip (market holidays)
+MIN_STOCK_DATA_ROWS=100                 # rows needed to consider today-price complete
+SCRAPE_ALERT_WEBHOOK=https://hooks.slack.com/...   # optional failure alert
+SCRAPE_HEALTHCHECK_URL=https://hc-ping.com/...     # optional success ping
+SCRAPE_LOCK_FILE=/tmp/nepse-scrape.lock
+```
+
+Manual runs:
+
+```bash
 cd /srv/nepse/stock_BE
-export $(grep -v '^#' .env | xargs)
-exec /srv/nepse/venv/bin/python manage.py run_scrape today-price \
-  --from "$(date +%F)" --to "$(date +%F)"
+/srv/nepse/venv/bin/python manage.py run_daily_scrape --dry-run
+/srv/nepse/venv/bin/python manage.py run_daily_scrape --date 2026-11-05
+/srv/nepse/venv/bin/python manage.py run_daily_scrape --only indices,today-price
 ```
 
-```bash
-sudo chmod +x /srv/nepse/scripts/scrape-daily.sh
-sudo chown -R nepse:nepse /srv/nepse/scripts
-```
-
-Crontab for `nepse` (`sudo -u nepse crontab -e`):
+### cron alternative
 
 ```cron
-# NEPSE is Monday-Friday after 2026-04-06; non-trading days are skipped anyway.
-30 18 * * 1-5 /srv/nepse/scripts/scrape-daily.sh >> /var/log/nepse/scrape.log 2>&1
-
-# Floorsheet (nepalstock whole-market) a few minutes later
-45 18 * * 1-5 cd /srv/nepse/stock_BE && /srv/nepse/venv/bin/python manage.py run_scrape floorsheet --source nepalstock --from "$(date +\%F)" --to "$(date +\%F)" >> /var/log/nepse/scrape.log 2>&1
+30 18 * * 1-5 cd /srv/nepse/stock_BE && /srv/nepse/venv/bin/python manage.py run_daily_scrape >> /var/log/nepse/scrape.log 2>&1
+30 20 * * 1-5 cd /srv/nepse/stock_BE && /srv/nepse/venv/bin/python manage.py run_daily_scrape >> /var/log/nepse/scrape.log 2>&1
+30 22 * * 1-5 cd /srv/nepse/stock_BE && /srv/nepse/venv/bin/python manage.py run_daily_scrape >> /var/log/nepse/scrape.log 2>&1
 ```
 
-Other supported jobs:
+### One-off / backfill
 
 ```bash
-manage.py run_scrape floorsheet --source merolagani --symbol AKJCL --from 2026-11-01 --to 2026-11-09
-manage.py run_scrape floorsheet --source merolagani --symbols AKJCL,NABIL --from 2026-11-01 --to 2026-11-09
+manage.py run_scrape indices     --date 2026-11-05
+manage.py run_scrape today-price --date 2026-11-06
+manage.py run_scrape floorsheet  --source nepalstock --date 2026-11-06
+manage.py run_scrape floorsheet  --source merolagani --symbol AKJCL --from 2026-11-01 --to 2026-11-09
+manage.py run_scrape floorsheet  --source merolagani --symbols AKJCL,NABIL --from 2026-11-01 --to 2026-11-09
+```
+
+### HTTP fallback
+
+`deploy/scrape-http.sh` logs in and calls the endpoints directly. It exists only for
+manual use — it still occupies a Gunicorn worker and needs a service account with the
+`download` feature:
+
+```bash
+SCRAPE_USER=scraper SCRAPE_PASSWORD='...' API_BASE=https://api.nepse.raijintech.com \
+  /srv/nepse/stock_BE/deploy/scrape-http.sh 2026-11-05
 ```
 
 ---

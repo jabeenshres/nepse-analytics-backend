@@ -1,0 +1,14 @@
+[Unit]
+Description=NEPSE daily scrape
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=nepse
+Group=nepse
+WorkingDirectory=/srv/nepse/stock_BE
+EnvironmentFile=/srv/nepse/stock_BE/.env
+ExecStart=/srv/nepse/venv/bin/python manage.py run_daily_scrape
+TimeoutStartSec=4h
+Nice=10
