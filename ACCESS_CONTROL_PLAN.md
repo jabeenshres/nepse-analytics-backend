@@ -79,7 +79,7 @@ user    -> all except download, users
    | `top_stocks` | analysis/top-stocks, unusual-activity, accumulation-alerts, breakout-watchlist, volume-spikes, recommendations |
    | `broker_holdings` | floorsheet/data, floorsheet/analysis, floorsheet/broker, floorsheet/broker-holdings |
    | `indices` | indices/data, indices/analysis, indices/compare, indices/list |
-   | `download` | fetch, floorsheet/upload, floorsheet/scrape, nepalstock-scrape, indices/scrape, predictions/generate, lstm, random-forest |
+   | `download` | fetch, floorsheet/upload, floorsheet/scrape, nepalstock-scrape, indices/scrape, lstm, random-forest |
    | `users` | accounts/users |
 
    `StockDataViewSet` / `StockViewSet` use `write_features = ('download',)`.

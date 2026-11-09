@@ -86,7 +86,6 @@ VIEW_FEATURES = {
     'FloorsheetScrapeView': 'download',
     'NepalstockFloorsheetScrapeView': 'download',
     'NepseIndicesScrapeView': 'download',
-    'GetPredictionsView': 'download',
     'AddLSTMPredictionView': 'download',
     'AddRFPredictionView': 'download',
 

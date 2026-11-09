@@ -10,7 +10,6 @@ from .models import StockData, Stock
 from .serializers import StockDataSerializer, StockSerializer, StockListSerializer
 from .utils import NepalStockScraper
 from .structure_data import StockSequenceGenerator
-from .predict_stock import StockPrediction
 from accounts.permissions import IsAdminOrManager
 
 
@@ -141,16 +140,6 @@ class LatestStockDataViewSet(viewsets.ViewSet):
                 'market_capitalization': stock_data_entry.market_capitalization,
             })
         return stock_data_by_symbol
-
-
-class GetPredictions(APIView):
-    permission_classes = [IsAdminOrManager]
-
-    def get(self, request):
-        prediction_date = request.query_params.get('date', None)
-        stock_predictor = StockPrediction()
-        predictions_result = stock_predictor.get_prediction(StockData, prediction_date)
-        return Response(predictions_result, status=status.HTTP_200_OK)
 
 
 class AddLSTMPrediction(APIView):

@@ -5,7 +5,7 @@
 This API provides endpoints for managing stock market data from Nepal Stock Exchange and generating machine learning predictions for stock prices. The API is divided into two main modules:
 
 1. **Stock Data API** - Handles data fetching, storage, and retrieval of stock market information
-2. **Predictions API** - Generates and manages ML-based stock price predictions using LSTM and Random Forest models
+2. **Predictions API** - Stores and serves ML-based stock price predictions posted by external model pipelines
 
 ---
 
@@ -574,75 +574,22 @@ Base URL: `/api/predictions/`
 
 ### Overview
 
-The Predictions API handles machine learning-based stock price predictions using two models:
-- **LSTM (Long Short-Term Memory)**: Deep learning model for time-series prediction
-- **Random Forest**: Ensemble learning model for regression
+The Predictions API stores and serves machine-learning stock price predictions produced
+by external model pipelines. Two prediction series are supported:
+- **LSTM (Long Short-Term Memory)**: deep-learning time-series predictions
+- **Random Forest**: ensemble regression predictions
 
 The API allows you to:
-- Generate predictions for all stocks
 - Add/update predictions from external ML training pipelines
 - Store model performance metrics (MAE, R-squared)
+- Read predictions through the stock-data endpoints
+
+The backend does not train or run the models itself; TensorFlow/Keras are not part of
+the deployment. A model pipeline running elsewhere posts its results to these endpoints.
 
 ---
 
-### 1. Generate Predictions
-
-**GET** `/api/predictions/generate/`
-
-Generate stock price predictions for all stocks using both LSTM and Random Forest models.
-
-**Permissions**: Admin or Manager only
-
-**What it does**:
-- Loads pre-trained LSTM and Random Forest models
-- For each stock, takes the last 6 days of data
-- Normalizes the data
-- Generates predictions for the next day
-- Updates the database with predicted prices
-- Returns predictions for all stocks
-
-**Query Parameters**:
-- `date` (string, optional): Target date for prediction in YYYY-MM-DD format. If not provided, uses the latest date in database.
-
-**Example Request**:
-```bash
-curl -X GET "http://localhost:8000/api/predictions/generate/?date=2024-01-16" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-```json
-{
-  "predictions": [
-    {
-      "symbol": "NBL",
-      "predicted_lstm_close_price": 460.25,
-      "predicted_rf_close_price": 462.50,
-      "date": "2024-01-16"
-    },
-    {
-      "symbol": "ADBL",
-      "predicted_lstm_close_price": 380.75,
-      "predicted_rf_close_price": 382.00,
-      "date": "2024-01-16"
-    },
-    {
-      "symbol": "SCB",
-      "error": "Not enough data for prediction"
-    }
-  ]
-}
-```
-
-**Requirements**:
-- Each stock must have at least 6 days of historical data
-- If prediction date is provided, there must be at least 6 days of data before that date
-
-**Note**: Predictions are automatically saved to the database. The `LSTM_predicted_close_price` and `RF_predicted_close_price` fields in StockData are updated.
-
----
-
-### 2. Add LSTM Predictions
+### 1. Add LSTM Predictions
 
 **POST** `/api/predictions/lstm/`
 
@@ -733,7 +680,7 @@ curl -X POST http://localhost:8000/api/predictions/lstm/ \
 
 ---
 
-### 3. Add Random Forest Predictions
+### 2. Add Random Forest Predictions
 
 **POST** `/api/predictions/random-forest/`
 
@@ -877,7 +824,7 @@ Most list endpoints support pagination with the following query parameters:
 
 ## Workflow Examples
 
-### Complete Workflow: Fetch Data → Generate Predictions
+### Complete Workflow: Fetch Data → Ingest Predictions
 
 1. **Fetch stock data from Nepal Stock Exchange**:
 ```bash
@@ -888,9 +835,10 @@ POST /api/stock-data/fetch/
 }
 ```
 
-2. **Generate predictions for all stocks**:
+2. **Train your model externally and upload predictions** (see the External ML Pipeline Workflow below):
 ```bash
-GET /api/predictions/generate/
+POST /api/predictions/lstm/
+POST /api/predictions/random-forest/
 ```
 
 3. **View latest stock data with predictions**:

@@ -10,57 +10,14 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime
 
 from stock_data.models import StockData, Stock
-from .predict_stock import StockPrediction
 from .constants import (
     DATE_FORMAT,
     PREDICTION_TYPE_LSTM,
     PREDICTION_TYPE_RF,
     REQUIRED_PREDICTION_KEYS,
 )
-from accounts.permissions import IsAdminOrManager
-from rest_framework.permissions import AllowAny
 
 logger = logging.getLogger(__name__)
-
-
-class GetPredictionsView(APIView):
-    """
-    API view for generating stock price predictions.
-    
-    Requires admin or manager permissions.
-    """
-    # permission_classes = [IsAdminOrManager]
-
-    def get(self, request):
-        """
-        Generate predictions for all stocks.
-        
-        Query Parameters:
-            date: Optional date for prediction (YYYY-MM-DD format)
-        
-        Returns:
-            Response with predictions for all stocks
-        """
-        prediction_date = request.query_params.get('date', None)
-        
-        try:
-            stock_predictor = StockPrediction()
-            predictions_result = stock_predictor.get_prediction(
-                StockData,
-                prediction_date
-            )
-            
-            logger.info(f"Generated predictions for date: {prediction_date}")
-            return Response(
-                predictions_result,
-                status=status.HTTP_200_OK
-            )
-        except Exception as e:
-            logger.error(f"Error generating predictions: {str(e)}", exc_info=True)
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
 
 class AddLSTMPredictionView(APIView):

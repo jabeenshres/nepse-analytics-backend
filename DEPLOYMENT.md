@@ -18,8 +18,8 @@ Example paths used below:
 /srv/nepse/scripts      # cron helper scripts
 ```
 
-Assumptions: Ubuntu 22.04/24.04, `nepse` system user, 4 GB RAM minimum
-(TensorFlow + headless Chrome are heavy).
+Assumptions: Ubuntu 22.04/24.04, `nepse` system user, 2 GB RAM minimum
+(headless Chrome is the heaviest part of the stack).
 
 ---
 
