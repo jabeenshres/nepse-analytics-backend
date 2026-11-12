@@ -311,6 +311,24 @@ MIN_STOCK_DATA_ROWS=100                 # rows needed to consider today-price co
 SCRAPE_ALERT_WEBHOOK=https://hooks.slack.com/...   # optional failure alert
 SCRAPE_HEALTHCHECK_URL=https://hc-ping.com/...     # optional success ping
 SCRAPE_LOCK_FILE=/tmp/nepse-scrape.lock
+
+# File-based response cache (no Redis required)
+CACHE_DIR=/srv/nepse/stock_BE/var/cache
+CACHE_TIMEOUT=300
+```
+
+Create the cache directory once, owned by the service user:
+
+```bash
+sudo install -d -o nepse -g nepse -m 750 /srv/nepse/stock_BE/var/cache
+```
+
+`run_daily_scrape` clears this cache and precomputes analytics when it finishes.
+To warm it manually (for example after deploying):
+
+```bash
+sudo -u nepse -H bash -lc 'cd /srv/nepse/stock_BE && set -a; . ./.env; set +a; \
+  /srv/nepse/venv/bin/python manage.py warm_analytics'
 ```
 
 Manual runs:
