@@ -110,13 +110,22 @@ class StockListSerializer(serializers.ModelSerializer):
         
         if not include_data:
             return []
-        
-        # Get latest entries, limited by data_limit
-        stock_data = obj.data.all()[:data_limit]
+
+        # The view prefetches only `data_limit` rows per stock into
+        # `recent_data`; fall back to a query for other callers.
+        recent = getattr(obj, 'recent_data', None)
+        if recent is None:
+            stock_data = obj.data.all()[:data_limit]
+        else:
+            stock_data = recent[:data_limit]
+
         return StockDataSerializer(stock_data, many=True).data
 
     def get_data_count(self, obj):
         """Get total count of stock data entries for this stock."""
+        annotated = getattr(obj, '_data_count', None)
+        if annotated is not None:
+            return annotated
         return obj.data.count()
 
 

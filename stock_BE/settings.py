@@ -129,6 +129,22 @@ else:
     }
 
 
+# Cache
+# File-based so it works with multiple gunicorn workers without Redis. The
+# directory lives under var/ (gitignored); point CACHE_DIR elsewhere in prod.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': env('CACHE_DIR', default=str(BASE_DIR / 'var' / 'cache')),
+        'TIMEOUT': env.int('CACHE_TIMEOUT', default=300),
+        'OPTIONS': {
+            'MAX_ENTRIES': env.int('CACHE_MAX_ENTRIES', default=2000),
+            'CULL_FREQUENCY': 3,
+        },
+    }
+}
+
+
 # Password validation
 
 AUTH_PASSWORD_VALIDATORS = [

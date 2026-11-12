@@ -9,7 +9,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from django.db.models import Max, Q, F
+from django.db.models import Count, F, Max, Prefetch, Q, Window
+from django.db.models.functions import RowNumber
 from django.shortcuts import get_object_or_404
 from datetime import datetime
 
@@ -96,7 +97,7 @@ class StockViewSet(viewsets.ModelViewSet):
              /api/stock-data/?stock_type=mutual_fund (show only mutual funds)
              /api/stock-data/?stock_type=all (show all security types)
     """
-    queryset = Stock.objects.prefetch_related('data').all()
+    queryset = Stock.objects.all()
     serializer_class = StockSerializer
     pagination_class = StockPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -117,7 +118,34 @@ class StockViewSet(viewsets.ModelViewSet):
         if stock_type.lower() != ALL_STOCK_TYPES:
             # Filter by specific stock type (default is 'stock')
             queryset = queryset.filter(stock_type=stock_type)
-        
+
+        if self.action in ('list', 'retrieve'):
+            # Total history count without loading the history itself.
+            queryset = queryset.annotate(_data_count=Count('data'))
+
+            include_data = (
+                self.request.query_params.get('include_data', 'true').lower()
+                in ('true', '1', 'yes')
+            )
+            if include_data:
+                # Prefetch only the rows the serializer will actually return.
+                # Prefetching all ~497 rows per stock took ~2 s for a 100-stock
+                # page and produced a 254 KB response.
+                limit = 60 if self.action == 'retrieve' else 5
+                recent = (
+                    StockData.objects
+                    .annotate(rn=Window(
+                        expression=RowNumber(),
+                        partition_by=[F('stock_id')],
+                        order_by=F('date').desc(),
+                    ))
+                    .filter(rn__lte=limit)
+                    .order_by('-date')
+                )
+                queryset = queryset.prefetch_related(
+                    Prefetch('data', queryset=recent, to_attr='recent_data')
+                )
+
         return queryset
 
     def get_serializer_class(self):
@@ -134,12 +162,13 @@ class StockViewSet(viewsets.ModelViewSet):
         include_data_param = self.request.query_params.get('include_data', 'true')
         include_data = include_data_param.lower() in ['true', '1', 'yes']
         
-        # Get data limit (max 50 to prevent huge responses)
+        # Detail pages render a 60-candle chart; list rows only need the latest.
+        default_limit = 60 if self.action == 'retrieve' else 5
         try:
-            data_limit = int(self.request.query_params.get('data_limit', '5'))
-            data_limit = min(max(data_limit, 0), 50)  # Clamp between 0 and 50
+            data_limit = int(self.request.query_params.get('data_limit', default_limit))
+            data_limit = min(max(data_limit, 0), 60)  # Clamp between 0 and 60
         except (ValueError, TypeError):
-            data_limit = 5
+            data_limit = default_limit
         
         context['include_data'] = include_data
         context['data_limit'] = data_limit
@@ -325,7 +354,24 @@ class StructuredDataView(APIView):
                     queryset = queryset.filter(date__lte=date_obj)
                 except ValueError:
                     pass
-            
+
+            # This view loads everything into pandas and returns it unpaginated.
+            # Require a filter and cap the row count so one request cannot try to
+            # materialise the whole StockData table.
+            if not stock_symbol and not date_gte and not date_lte:
+                return Response(
+                    {'error': 'Provide stock__symbol or a date range '
+                              '(date__gte / date__lte)'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            max_rows = 20000
+            if queryset.count() > max_rows:
+                return Response(
+                    {'error': f'Result exceeds {max_rows} rows; narrow the filters'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             sequence_generator = StockSequenceGenerator()
             stock_dataframe = sequence_generator.fetch_data_from_queryset(queryset)
             json_data = stock_dataframe.to_dict(orient="records")

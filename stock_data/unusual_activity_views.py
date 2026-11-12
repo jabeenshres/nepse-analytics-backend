@@ -38,6 +38,16 @@ DATE_FORMAT = '%Y-%m-%d'
 # Thread lock for serializing cache writes to prevent SQLite database locks
 _cache_write_lock = threading.Lock()
 
+# Marker stored for stocks that cannot produce a result (e.g. not enough
+# history). Without it they are re-analysed on every request, which is the
+# remaining per-request cost after warm_analytics.
+NO_DATA_CACHE = {'__no_data__': True}
+
+
+def _unwrap_cached(value):
+    """Map a negative cache entry to None, leaving real results untouched."""
+    return None if value == NO_DATA_CACHE else value
+
 
 def bulk_load_cache(stocks, analysis_date, cache_type):
     """
@@ -558,7 +568,7 @@ class AccumulationAlertView(APIView):
         
         # Get cache parameters
         use_cache = request.query_params.get('use_cache', 'true').lower() == 'true'
-        force_recompute = request.query_params.get('force_recompute', 'false').lower() == 'false'
+        force_recompute = request.query_params.get('force_recompute', 'false').lower() == 'true'
         
         if symbol:
             try:
@@ -644,9 +654,8 @@ class AccumulationAlertView(APIView):
         if use_cache and not force_recompute:
             # Use pre-loaded cache dict if provided (faster)
             if cache_dict is not None:
-                cached_data = cache_dict.get(stock.id)
-                if cached_data is not None:
-                    return cached_data
+                if stock.id in cache_dict:
+                    return _unwrap_cached(cache_dict[stock.id])
             else:
                 # Fallback to individual query (slower, but works for single stock lookups)
                 from .models import StockAnalyticsCache
@@ -656,16 +665,18 @@ class AccumulationAlertView(APIView):
                         analysis_date=analysis_date,
                         cache_type='accumulation_alerts'
                     )
-                    return cache_entry.analytics_data
+                    return _unwrap_cached(cache_entry.analytics_data)
                 except StockAnalyticsCache.DoesNotExist:
                     pass
         
         # Compute analysis
         result = self._analyze_single_stock(stock, analysis_date)
         
-        # Save to cache if result exists (with retry logic for SQLite locking)
-        if result and use_cache:
-            save_analytics_cache_safe(stock, analysis_date, 'accumulation_alerts', result)
+        # Cache negative results too, so they are not recomputed every request.
+        if use_cache:
+            save_analytics_cache_safe(
+                stock, analysis_date, 'accumulation_alerts', result or NO_DATA_CACHE
+            )
         
         return result
     
@@ -880,9 +891,8 @@ class TopStocksToWatchView(APIView):
         if use_cache and not force_recompute:
             # Use pre-loaded cache dict if provided (faster)
             if cache_dict is not None:
-                cached_data = cache_dict.get(stock.id)
-                if cached_data is not None:
-                    return cached_data
+                if stock.id in cache_dict:
+                    return _unwrap_cached(cache_dict[stock.id])
             else:
                 # Fallback to individual query (slower, but works for single stock lookups)
                 from .models import StockAnalyticsCache
@@ -892,7 +902,7 @@ class TopStocksToWatchView(APIView):
                         analysis_date=analysis_date,
                         cache_type=cache_type
                     )
-                    return cache_entry.analytics_data
+                    return _unwrap_cached(cache_entry.analytics_data)
                 except StockAnalyticsCache.DoesNotExist:
                     pass
         
@@ -903,9 +913,11 @@ class TopStocksToWatchView(APIView):
             # For other types, we'll compute them separately
             result = None
         
-        # Save to cache if result exists (with retry logic for SQLite locking)
-        if result and use_cache:
-            save_analytics_cache_safe(stock, analysis_date, cache_type, result)
+        # Cache negative results too, so they are not recomputed every request.
+        if use_cache:
+            save_analytics_cache_safe(
+                stock, analysis_date, cache_type, result or NO_DATA_CACHE
+            )
         
         return result
     
@@ -2714,9 +2726,8 @@ class BreakoutWatchlistView(APIView):
         if use_cache and not force_recompute:
             # Use pre-loaded cache dict if provided (faster)
             if cache_dict is not None:
-                cached_data = cache_dict.get(stock.id)
-                if cached_data is not None:
-                    return cached_data
+                if stock.id in cache_dict:
+                    return _unwrap_cached(cache_dict[stock.id])
             else:
                 # Fallback to individual query (slower, but works for single stock lookups)
                 from .models import StockAnalyticsCache
@@ -2726,16 +2737,18 @@ class BreakoutWatchlistView(APIView):
                         analysis_date=analysis_date,
                         cache_type='breakout_watchlist'
                     )
-                    return cache_entry.analytics_data
+                    return _unwrap_cached(cache_entry.analytics_data)
                 except StockAnalyticsCache.DoesNotExist:
                     pass
         
         # Compute analysis
         result = self._analyze_breakout_potential(stock, analysis_date)
         
-        # Save to cache if result exists (with retry logic for SQLite locking)
-        if result and use_cache:
-            save_analytics_cache_safe(stock, analysis_date, 'breakout_watchlist', result)
+        # Cache negative results too, so they are not recomputed every request.
+        if use_cache:
+            save_analytics_cache_safe(
+                stock, analysis_date, 'breakout_watchlist', result or NO_DATA_CACHE
+            )
         
         return result
     

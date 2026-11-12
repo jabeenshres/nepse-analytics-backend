@@ -9,8 +9,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from django.db.models import Avg, Max, Min, Sum, Count
-from django.db.models.functions import TruncMonth, TruncWeek
+from django.db.models import Avg, Count, F, Max, Min, Sum, Window
+from django.db.models.functions import RowNumber, TruncMonth, TruncWeek
 
 from .models import NepseIndex
 from .nepse_indices_scraper import (
@@ -477,52 +477,59 @@ class NepseIndicesCompareView(APIView):
         
         date_from = datetime.now().date() - timedelta(days=days)
         
+        # One query for every requested index instead of ~6 queries per index.
+        rows = list(
+            NepseIndex.objects
+            .filter(index_id__in=index_ids, date__gte=date_from)
+            .order_by('index_id', '-date')
+            .values(
+                'index_id', 'date', 'close', 'percentage_change',
+                'turnover_volume', 'turnover_value',
+                'fifty_two_weeks_high', 'fifty_two_weeks_low',
+            )
+        )
+
+        by_index = {}
+        for row in rows:
+            by_index.setdefault(row['index_id'], []).append(row)
+
         comparison = []
-        
+
         for index_id in index_ids:
-            queryset = NepseIndex.objects.filter(
-                index_id=index_id,
-                date__gte=date_from
-            ).order_by('-date')
-            
-            if not queryset.exists():
+            group = by_index.get(index_id, [])
+
+            if not group:
                 comparison.append({
                     'index_id': index_id,
                     'index_name': INDEX_MAPPING.get(index_id),
                     'message': 'No data available'
                 })
                 continue
-            
-            latest = queryset.first()
-            oldest = queryset.last()
-            
-            # Calculate period return
+
+            latest = group[0]
+            oldest = group[-1]
+
             period_return = None
-            if latest and oldest and oldest.close > 0:
-                period_return = ((latest.close - oldest.close) / oldest.close) * 100
-            
-            # Get statistics
-            stats = queryset.aggregate(
-                avg_volume=Avg('turnover_volume'),
-                total_turnover=Sum('turnover_value'),
-            )
-            
-            # Count positive days separately (can't use lambda in aggregate filter)
-            positive_days = queryset.filter(percentage_change__gt=0).count()
-            total_days = queryset.count()
-            
+            if oldest['close'] and oldest['close'] > 0:
+                period_return = ((latest['close'] - oldest['close']) / oldest['close']) * 100
+
+            total_days = len(group)
+            avg_volume = sum(r['turnover_volume'] or 0 for r in group) / total_days
+            total_turnover = sum(r['turnover_value'] or 0 for r in group)
+            positive_days = sum(1 for r in group if (r['percentage_change'] or 0) > 0)
+
             comparison.append({
                 'index_id': index_id,
                 'index_name': INDEX_MAPPING.get(index_id),
-                'current_close': float(latest.close) if latest else None,
-                'start_close': float(oldest.close) if oldest else None,
+                'current_close': float(latest['close']),
+                'start_close': float(oldest['close']),
                 'period_return_percent': round(float(period_return), 2) if period_return else None,
-                'daily_change_percent': float(latest.percentage_change) if latest else None,
-                'avg_daily_volume': int(stats['avg_volume']) if stats['avg_volume'] else 0,
-                'total_turnover': float(stats['total_turnover']) if stats['total_turnover'] else 0,
+                'daily_change_percent': float(latest['percentage_change']),
+                'avg_daily_volume': int(avg_volume),
+                'total_turnover': float(total_turnover),
                 'positive_days_ratio': round(positive_days / total_days * 100, 1) if total_days else 0,
-                '52_week_high': float(latest.fifty_two_weeks_high) if latest else None,
-                '52_week_low': float(latest.fifty_two_weeks_low) if latest else None,
+                '52_week_high': float(latest['fifty_two_weeks_high']),
+                '52_week_low': float(latest['fifty_two_weeks_low']),
             })
         
         # Sort by period return
@@ -545,16 +552,30 @@ class NepseIndicesListView(APIView):
 
     def get(self, request):
         indices_list = []
-        
+
+        # Two queries total: one grouped count, one windowed "latest row per
+        # index". The previous loop ran first() + count() for all 17 indices.
+        record_counts = dict(
+            NepseIndex.objects.order_by()
+            .values_list('index_id')
+            .annotate(n=Count('id'))
+            .values_list('index_id', 'n')
+        )
+        latest_rows = (
+            NepseIndex.objects
+            .annotate(rn=Window(
+                expression=RowNumber(),
+                partition_by=[F('index_id')],
+                order_by=F('date').desc(),
+            ))
+            .filter(rn=1)
+        )
+        latest_by_id = {row.index_id: row for row in latest_rows}
+
         for index_id, index_name in INDEX_MAPPING.items():
-            # Get latest record for each index
-            latest = NepseIndex.objects.filter(
-                index_id=index_id
-            ).order_by('-date').first()
-            
-            # Get record count
-            record_count = NepseIndex.objects.filter(index_id=index_id).count()
-            
+            latest = latest_by_id.get(index_id)
+            record_count = record_counts.get(index_id, 0)
+
             indices_list.append({
                 'index_id': index_id,
                 'index_name': index_name,

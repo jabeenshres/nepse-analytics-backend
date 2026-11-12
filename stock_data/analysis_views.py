@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 
+from django.core.cache import cache
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -15,7 +16,12 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Max, Avg, F, Q
 
 from .models import Stock, StockData, Portfolio, PortfolioHolding, Trade, BacktestResult
-from .technical_indicators import calculate_all_indicators, generate_trading_signals
+from .technical_indicators import (
+    calculate_all_indicators,
+    calculate_rsi,
+    calculate_stochastic,
+    generate_trading_signals,
+)
 from .serializers import (
     PortfolioSerializer,
     PortfolioHoldingSerializer,
@@ -233,22 +239,44 @@ class StockScreenerView(APIView):
                 {'error': 'No stock data available'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
-        # Get all stocks with recent data, filtered by stock_type
-        stocks = Stock.objects.all()
+
+        # Screener results depend only on these parameters + the data date.
+        cache_key = (
+            f"screener:{latest_date}:{screener_type}:{stock_type}:"
+            f"{min_price}:{max_price}:{limit}"
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        # Get all candidate stocks, filtered by stock_type
+        stocks_qs = Stock.objects.all()
         if stock_type.lower() != 'all':
-            stocks = stocks.filter(stock_type=stock_type)
-        
+            stocks_qs = stocks_qs.filter(stock_type=stock_type)
+        stocks = list(stocks_qs)
+
+        # Load recent rows for every candidate in ONE query. The old code ran a
+        # separate 60-row query per stock (306 round trips per request).
+        # 180 calendar days is ~120 trading days, enough to slice the last 60.
+        lookback = latest_date - timedelta(days=180)
+        rows = (StockData.objects
+                .filter(stock__in=stocks, date__gte=lookback, date__lte=latest_date)
+                .values(
+                    'stock_id', 'date', 'open_price', 'high_price',
+                    'low_price', 'close_price', 'total_traded_quantity'
+                )
+                .order_by('stock_id', 'date'))
+
+        data_by_stock = {}
+        for row in rows:
+            data_by_stock.setdefault(row['stock_id'], []).append(row)
+
         results = []
         for stock in stocks:
-            # Get recent data for each stock
-            data = list(StockData.objects.filter(
-                stock=stock
-            ).order_by('-date')[:60].values(
-                'date', 'open_price', 'high_price',
-                'low_price', 'close_price', 'total_traded_quantity'
-            ))
-            
+            # Last 60 rows, ascending by date (already ordered by the query).
+            data = data_by_stock.get(stock.id, [])[-60:]
+            data = [{k: v for k, v in row.items() if k != 'stock_id'} for row in data]
+
             if len(data) < 30:  # Need minimum data for calculations
                 continue
             
@@ -260,8 +288,10 @@ class StockScreenerView(APIView):
             if latest_close < min_price or latest_close > max_price:
                 continue
             
-            # Calculate indicators
-            df = calculate_all_indicators(df)
+            # Only compute the columns this screener type actually reads.
+            # calculate_all_indicators() computes ~30 columns and dominates
+            # the request time across 300+ stocks.
+            df = self._add_screener_indicators(df, screener_type)
             latest = df.iloc[-1]
             
             # Screen based on type
@@ -288,14 +318,42 @@ class StockScreenerView(APIView):
         # Sort results by relevance score
         results.sort(key=lambda x: x.get('score', 0), reverse=True)
         
-        return Response({
+        payload = {
             'screener_type': screener_type,
             'count': len(results[:limit]),
             'total_matched': len(results),
             'date': str(latest_date),
             'results': results[:limit]
-        })
+        }
+        cache.set(cache_key, payload, timeout=300)
+        return Response(payload)
     
+    @staticmethod
+    def _add_screener_indicators(df, screener_type):
+        """Add only the indicator columns this screener type reads.
+
+        Running calculate_all_indicators() for every stock costs far more than
+        the query itself (~57 ms vs ~1 ms per stock locally).
+        """
+        close = pd.to_numeric(df['close_price'], errors='coerce')
+        df['Daily_Return'] = close.pct_change()
+
+        if screener_type in ('momentum', 'trend_following'):
+            df['SMA_20'] = close.rolling(window=20).mean()
+            df['SMA_50'] = close.rolling(window=50).mean()
+
+        if screener_type in ('momentum', 'volume_breakout'):
+            volume = pd.to_numeric(df['total_traded_quantity'], errors='coerce')
+            df['Volume_Ratio'] = volume / volume.rolling(window=20).mean()
+
+        if screener_type in ('oversold', 'overbought'):
+            high = pd.to_numeric(df['high_price'], errors='coerce')
+            low = pd.to_numeric(df['low_price'], errors='coerce')
+            df['RSI'] = calculate_rsi(close)
+            df['Stoch_K'], _ = calculate_stochastic(high, low, close)
+
+        return df
+
     def _check_momentum(self, latest) -> bool:
         """Check if stock meets momentum criteria."""
         if pd.isna(latest.get('SMA_20')) or pd.isna(latest.get('SMA_50')):

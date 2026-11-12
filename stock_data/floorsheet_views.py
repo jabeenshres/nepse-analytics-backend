@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.db.models import Sum, Count, Avg, Max, F, Q
-from django.db.models.functions import TruncDate
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -617,15 +617,17 @@ class FloorsheetAnalysisView(APIView):
             'amount'
         )[:20])
         
-        # Daily volume pattern
-        daily_volume = list(queryset.annotate(
-            date=TruncDate('transaction_date')
-        ).values('date').annotate(
+        # Daily volume pattern. ``transaction_date`` is already a DateField, so
+        # group on it directly. TruncDate() on a DateField with USE_TZ=True crashes
+        # Django's SQLite date UDF ("user-defined function raised exception").
+        daily_volume = list(queryset.values('transaction_date').annotate(
             total_quantity=Sum('quantity'),
             total_amount=Sum('amount'),
             trade_count=Count('id'),
             avg_rate=Avg('rate')
-        ).order_by('date'))
+        ).order_by('transaction_date'))
+        for row in daily_volume:
+            row['date'] = row.pop('transaction_date')
         
         # Broker concentration (Herfindahl-Hirschman Index approximation)
         buyer_shares = queryset.values('buyer_broker').annotate(

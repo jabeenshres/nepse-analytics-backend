@@ -4,8 +4,9 @@ Gunicorn configuration for the NEPSE API.
 Start with:
     gunicorn stock_BE.wsgi:application -c gunicorn.conf.py
 
-Long-running scrape endpoints keep a worker for a while, hence the high timeout.
-Prefer `manage.py run_scrape` from cron for heavy jobs (see DEPLOYMENT.md).
+Scrapes run from systemd (`manage.py run_daily_scrape`), not inside HTTP
+requests, so a worker should never be held for more than a couple of minutes.
+See DEPLOYMENT.md.
 """
 import os
 
@@ -17,7 +18,7 @@ workers = int(os.environ.get("GUNICORN_WORKERS", "3"))
 threads = int(os.environ.get("GUNICORN_THREADS", "4"))
 worker_class = "gthread"
 
-timeout = int(os.environ.get("GUNICORN_TIMEOUT", "3600"))
+timeout = int(os.environ.get("GUNICORN_TIMEOUT", "120"))
 graceful_timeout = int(os.environ.get("GUNICORN_GRACEFUL_TIMEOUT", "30"))
 keepalive = 5
 

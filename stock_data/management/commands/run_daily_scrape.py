@@ -17,6 +17,8 @@ import os
 from datetime import datetime
 from urllib import request
 
+from django.core.cache import cache
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
@@ -85,6 +87,12 @@ class Command(BaseCommand):
             action='store_true',
             help='Only print the current database counts for the date',
         )
+        parser.add_argument(
+            '--no-warm-analytics',
+            action='store_false',
+            dest='warm_analytics',
+            help='Skip precomputing StockAnalyticsCache after a successful run',
+        )
 
     def handle(self, *args, **options):
         target = self._resolve_date(options.get('date'))
@@ -141,6 +149,9 @@ class Command(BaseCommand):
                 }
                 self._print_task(task, result, status, counts, note)
 
+            # Stored data changed; drop any cached API responses.
+            cache.clear()
+
             failed = [t for t, r in results.items() if r['status'] in ('no_data', 'error')]
             summary = self._summary(target, results, failed)
             self.stdout.write('\n' + summary)
@@ -149,9 +160,26 @@ class Command(BaseCommand):
                 self._alert(options['alert_webhook'], summary)
                 raise CommandError(f"Unfinished tasks: {', '.join(failed)}")
 
+            if options['warm_analytics']:
+                self._warm_analytics(target)
+
             self._ping(options['healthcheck_url'])
         finally:
             self._unlock(lock)
+
+    def _warm_analytics(self, target):
+        """Precompute analytics so the first request after the scrape is fast.
+
+        A failure here must not fail the scrape: the data itself is already
+        stored and the endpoints fall back to lazy computation.
+        """
+        self.stdout.write('Precomputing analytics cache...')
+        try:
+            call_command('warm_analytics', date=target.isoformat(), verbosity=0)
+        except Exception as exc:  # noqa: BLE001 - best effort
+            self.stderr.write(f'Analytics warm-up skipped: {exc}')
+        else:
+            self.stdout.write(self.style.SUCCESS('Analytics cache warmed.'))
 
     # ------------------------------------------------------------------
     # Task wiring
