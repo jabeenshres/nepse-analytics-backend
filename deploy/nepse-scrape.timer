@@ -1,0 +1,14 @@
+[Unit]
+Description=Run NEPSE scrapes after market close
+
+[Timer]
+# Main run plus two retries. The command is idempotent and only fills what is missing.
+OnCalendar=Mon..Fri 18:00:00 Asia/Kathmandu
+OnCalendar=Mon..Fri 20:00:00 Asia/Kathmandu
+OnCalendar=Mon..Fri 22:00:00 Asia/Kathmandu
+Persistent=true
+AccuracySec=1min
+Unit=nepse-scrape.service
+
+[Install]
+WantedBy=timers.target
